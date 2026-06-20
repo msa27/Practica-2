@@ -11,10 +11,15 @@ alwaysApply: true
 |-----------|-----------|
 | `Database script.txt` | Esquema BD `Practica2` (Clientes, Mascotas) |
 | `Enunciado Práctica 2.pdf` | Requisitos funcionales de la práctica |
-| `RepoKN/` | Plantilla de referencia (solo consulta de patrones) |
+| `Practica2.Web/` | Proyecto ASP.NET MVC 5 (desde cero) |
+| `Practica2.Web.sln` | Solución Visual Studio |
+| `.cursor/rules/practica2-*.mdc` | Reglas de desarrollo del proyecto |
+
+## Referencia local (no versionada)
+
+`RepoKN/` puede existir en disco como copia local de la plantilla del profesor. **No forma parte del flujo de desarrollo** ni se versiona en Git. Los patrones ya están capturados en `practica2-*.mdc`.
 
 ## Desarrollo
 
-- El proyecto web MVC se implementa en `RepoKN/KN_WEB/`, extendiendo la plantilla KN.
-- Patrones de la plantilla: reglas en `RepoKN/.cursor/rules/`.
-- Dominio y requisitos de Practica 2: reglas `practica2-*.mdc` en esta carpeta (`.cursor/rules/`).
+- Implementar la práctica en `Practica2.Web/` siguiendo las reglas `practica2-*.mdc`.
+- Crear el proyecto MVC en Visual Studio si aún no existe (ver `Practica2.Web/README.md`).

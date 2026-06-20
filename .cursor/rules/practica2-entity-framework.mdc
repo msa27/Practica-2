@@ -1,6 +1,6 @@
 ---
 description: EF6 Database First para Practica 2
-globs: RepoKN/KN_WEB/{EF,Servicios,Controllers}/**/*
+globs: Practica2.Web/{EF,Servicios,Controllers}/**/*
 alwaysApply: false
 ---
 
@@ -13,7 +13,7 @@ Archivos en `EF/` son auto-generados desde EDMX. Regenerar en Visual Studio tras
 ## Uso del contexto
 
 ```csharp
-using (var context = new KN_BDEntities())
+using (var context = new Practica2Entities())
 {
     var cliente = (from C in context.Clientes
                    where C.Cedula == model.Cedula
@@ -28,7 +28,7 @@ using (var context = new KN_BDEntities())
 
 - **Entidades EF** (`Clientes`, `Mascotas`) → carpeta `EF/`
 - **ViewModels** (`ClienteModel`) → carpeta `Models/`
-- Nunca pasar entidades EF a vistas: `@model KN_WEB.Models.ClienteModel`
+- Nunca pasar entidades EF a vistas: `@model Practica2.Web.Models.ClienteModel`
 
 ## Relaciones
 

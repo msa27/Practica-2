@@ -1,12 +1,12 @@
 ---
 description: Patrones de controladores MVC para Practica 2
-globs: RepoKN/KN_WEB/Controllers/**/*.cs
+globs: Practica2.Web/Controllers/**/*.cs
 alwaysApply: false
 ---
 
 # Controladores (Practica 2)
 
-Seguir `HomeController.cs` al crear `ClientesController`, `MascotasController`, etc.
+Crear `ClientesController`, `MascotasController`, etc. siguiendo el patrón de abajo.
 
 ## Estructura
 
@@ -23,7 +23,7 @@ public ActionResult Registrar(ClienteModel model)
 {
     try
     {
-        using (var context = new KN_BDEntities())
+        using (var context = new Practica2Entities())
         {
             var existe = (from C in context.Clientes
                           where C.Cedula == model.Cedula

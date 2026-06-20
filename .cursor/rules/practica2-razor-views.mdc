@@ -1,6 +1,6 @@
 ---
 description: Vistas Razor para Practica 2
-globs: RepoKN/KN_WEB/Views/**/*.cshtml
+globs: Practica2.Web/Views/**/*.cshtml
 alwaysApply: false
 ---
 
@@ -9,14 +9,14 @@ alwaysApply: false
 ## Layouts
 
 - CRUD interno / consultas: `~/Views/Shared/_Layout.cshtml`
-- Login/registro externo: `~/Views/Shared/_LayoutExterno.cshtml`
+- Login/registro externo (si aplica): `~/Views/Shared/_LayoutExterno.cshtml`
 
 Personalizar `_Layout` con mensaje de bienvenida y 3 opciones de menú (enunciado).
 
 ## Formulario
 
 ```cshtml
-@model KN_WEB.Models.ClienteModel
+@model Practica2.Web.Models.ClienteModel
 @{ Layout = "~/Views/Shared/_Layout.cshtml"; }
 
 @using (Html.BeginForm("Registrar", "Clientes", FormMethod.Post, new { @id = "RegistrarClienteForm" }))

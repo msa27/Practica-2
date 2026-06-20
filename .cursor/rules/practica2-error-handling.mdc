@@ -1,6 +1,6 @@
 ---
 description: Bitácora y mensajes al usuario (Practica 2)
-globs: RepoKN/KN_WEB/{Controllers,Servicios}/**/*
+globs: Practica2.Web/{Controllers,Servicios}/**/*
 alwaysApply: false
 ---
 

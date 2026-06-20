@@ -1,6 +1,6 @@
 ---
 description: ViewModels POCO para Practica 2
-globs: RepoKN/KN_WEB/Models/**/*.cs
+globs: Practica2.Web/Models/**/*.cs
 alwaysApply: false
 ---
 
@@ -9,7 +9,7 @@ alwaysApply: false
 POCOs simples en `Models/`, separados de entidades EF (`EF/`).
 
 ```csharp
-namespace KN_WEB.Models
+namespace Practica2.Web.Models
 {
     public class ClienteModel
     {

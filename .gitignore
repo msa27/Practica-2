@@ -61,9 +61,8 @@ _ReSharper*/
 # Nested professor repo backup (removed for monorepo)
 .git-backup/
 
-# Plantilla de referencia local — no versionar en GitHub
-RepoKN/KN_WEB/
-RepoKN/KN_WEB.slnx
+# Plantilla de referencia local — no versionar (obsoleta para desarrollo)
+RepoKN/
 
 # Windows / temp
 Thumbs.db
@@ -75,4 +74,3 @@ $RECYCLE.BIN/
 *.swp
 *~
 .DS_Store
-

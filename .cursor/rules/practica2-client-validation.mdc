@@ -1,6 +1,6 @@
 ---
 description: jQuery Validate para formularios Practica 2
-globs: RepoKN/KN_WEB/Scripts/**/*.js
+globs: Practica2.Web/Scripts/**/*.js
 alwaysApply: false
 ---
 
@@ -36,5 +36,5 @@ $(document).ready(function () {
 - Mensajes en **español**
 - Claves de `rules`/`messages` = nombres exactos del ViewModel
 - `id` del form = `{Accion}Form`; script en `@section scripts`
-- Contraseñas (si aplica): `minlength: 5` + regla `specialChar` (ver `index.js`)
+- Contraseñas (si aplica): `minlength: 5` + regla `specialChar`
 - Mascotas: validar `Peso` numérico (`number: true`, `min: 0.01`)

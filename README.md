@@ -1,19 +1,31 @@
 ﻿# Practica 2
 
-Materials for **Practica 2** (Clientes / Mascotas): enunciado, database script, and Cursor rules for the assignment.
+Proyecto **ASP.NET MVC 5** para la práctica Clientes / Mascotas, desarrollado desde cero.
 
-## What is in this repository
+## Contenido del repositorio
 
-| Path | Purpose |
-|------|---------|
-| `Database script.txt` | SQL schema for `Practica2` |
-| `Enunciado Práctica 2.pdf` | Assignment requirements |
-| `.cursor/rules/` | Workspace rules (`practica2-*`, `workspace-overview`) |
-| `RepoKN/BD Semana.sql` | Reference SQL from professor template |
-| `RepoKN/.cursor/rules/` | Reference Cursor rules from KN template |
+| Path | Propósito |
+|------|-----------|
+| `Database script.txt` | Esquema SQL de la BD `Practica2` |
+| `Enunciado Práctica 2.pdf` | Requisitos funcionales |
+| `.cursor/rules/` | Reglas Cursor (`practica2-*`, `workspace-overview`) |
+| `Practica2.Web/` | Proyecto web MVC (código de la práctica) |
+| `Practica2.Web.sln` | Solución Visual Studio |
 
-## Local reference only (not in Git)
+## Referencia local (no en Git)
 
-**`RepoKN/KN_WEB/`** and **`RepoKN/KN_WEB.slnx`** are the professor ASP.NET MVC template and solution file. Keep them on your machine for patterns and copy-paste, but they are **not** tracked in Git (see `.gitignore`). Do not commit or push those paths.
+La carpeta **`RepoKN/`** puede existir en tu máquina como copia de la plantilla del profesor. Ya **no forma parte del flujo de desarrollo**: los patrones están en `.cursor/rules/practica2-*.mdc`. Toda `RepoKN/` está excluida de Git (`.gitignore`).
 
-If you clone this repo, obtain `KN_WEB` from your course materials or your existing local copy.
+## Primeros pasos
+
+1. Ejecutar `Database script.txt` en SQL Server (crea la BD `Practica2`).
+2. Crear el proyecto MVC en Visual Studio (ver `Practica2.Web/README.md`).
+3. Añadir modelo EF6 Database First apuntando a `Practica2`.
+4. Implementar `ClientesController`, `MascotasController` y vistas según el enunciado.
+
+## Requisitos principales
+
+- Layout con bienvenida y 3 opciones de menú
+- Registro de clientes (cédula única)
+- Registro de mascotas (máx. 2 por especie por cliente)
+- Consulta de mascotas por cédula/nombre de cliente

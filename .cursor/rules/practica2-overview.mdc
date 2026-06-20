@@ -1,20 +1,18 @@
 ---
-description: Stack y estructura para desarrollar Practica 2 en KN_WEB
-globs: RepoKN/KN_WEB/**
+description: Stack y estructura del proyecto Practica 2
+globs: Practica2.Web/**
 alwaysApply: false
 ---
 
-# Practica 2 — Desarrollo (estilo RepoKN)
+# Practica 2 — Desarrollo
 
-## Referencia
-
-Analizar `RepoKN/KN_WEB/` como plantilla. Replicar su estructura y convenciones al implementar Clientes/Mascotas.
+Proyecto ASP.NET MVC 5 **desde cero** para Clientes/Mascotas. Seguir convenciones definidas en `practica2-*.mdc`.
 
 ## Stack
 
 ASP.NET MVC 5, .NET Framework 4.8.1, EF6 Database First (EDMX en `EF/`), SQL Server, Bootstrap + Mazer, jQuery Validation.
 
-## Carpetas (`RepoKN/KN_WEB/`)
+## Carpetas (`Practica2.Web/`)
 
 | Carpeta | Uso |
 |---------|-----|
@@ -27,6 +25,6 @@ ASP.NET MVC 5, .NET Framework 4.8.1, EF6 Database First (EDMX en `EF/`), SQL Ser
 
 ## Convenciones C#
 
-- Namespace: `KN_WEB` (+ sub-namespace según carpeta)
+- Namespace: `Practica2.Web` (+ sub-namespace según carpeta)
 - Propiedades PascalCase en español, alineadas con columnas SQL
 - UI, mensajes y comentarios de negocio: **español**
