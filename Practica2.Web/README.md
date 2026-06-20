@@ -2,34 +2,68 @@
 
 Proyecto ASP.NET MVC 5 para la práctica Clientes / Mascotas.
 
-## Crear el proyecto en Visual Studio
+## Requisitos
 
-1. **File → New → Project** → ASP.NET Web Application (.NET Framework)
-2. Nombre: `Practica2.Web`, ubicación: raíz del workspace (`C:\workspace\Practica 2\`)
-3. Plantilla: **MVC**, .NET Framework **4.8.1**
-4. Guardar la solución como `Practica2.Web.sln` en la raíz del workspace
+- Visual Studio 2022 (carga de trabajo ASP.NET)
+- SQL Server con la base de datos `Practica2` (script en `Database script.txt`)
+- .NET Framework 4.8
 
-## Estructura esperada
+## Ejecutar
+
+1. Abrir `Practica2.Web.sln` en Visual Studio.
+2. Verificar la cadena de conexión `Practica2Entities` en `Web.config`.
+3. Establecer `Practica2.Web` como proyecto de inicio.
+4. Presionar F5 (IIS Express).
+
+URL local sugerida: `https://localhost:44300/`
+
+## Cadena de conexión
+
+```xml
+<add name="Practica2Entities"
+     connectionString="data source=localhost;initial catalog=Practica2;integrated security=True;trustservercertificate=True;MultipleActiveResultSets=True;App=EntityFramework"
+     providerName="System.Data.SqlClient" />
+```
+
+Ajuste `data source` si su instancia de SQL Server no es `localhost`.
+
+## Estructura
 
 ```
 Practica2.Web/
 ├── App_Start/       RouteConfig, FilterConfig, BundleConfig
 ├── Controllers/     ClientesController, MascotasController, HomeController
-├── Models/          ClienteModel, MascotaModel (ViewModels)
-├── EF/              EDMX + entidades generadas (Practica2Entities)
-├── Servicios/       UtilitarioService (bitácora de errores)
+├── Models/          ClienteModel, MascotaModel, ConsultaMascotaModel
+├── EF/              Entidades y Practica2Entities (EF6)
+├── Servicios/       UtilitarioService
 ├── Views/           Razor por controlador + Shared/_Layout.cshtml
-├── Scripts/         Validación jQuery por formulario
-├── Content/         CSS (Bootstrap, Mazer)
-└── Web.config       Cadena de conexión a Practica2
+├── Scripts/         registrar-cliente.js, registrar-mascota.js
+├── Content/         site.css
+└── Web.config
 ```
 
-## Base de datos
+## Pantallas
 
-- Ejecutar `Database script.txt` en SQL Server
-- Añadir **ADO.NET Entity Data Model** (Database First) contra `Practica2`
-- Contexto sugerido: `Practica2Entities`
+| Menú | Ruta | Descripción |
+|------|------|-------------|
+| Registro de Clientes | `/Clientes/Registrar` | Cédula, Nombre, Correo |
+| Registro de Mascotas | `/Mascotas/Registrar` | Nombre, Especie, Raza, Peso, Cliente |
+| Consulta de Mascotas | `/Mascotas/Consultar` | Listado con datos de cliente y mascota |
 
-## Convenciones
+## Reglas de negocio
 
-Ver reglas en `.cursor/rules/practica2-*.mdc` (namespace `Practica2.Web`, UI en español).
+- Cédula única por cliente
+- Máximo 2 mascotas de la misma especie por cliente
+- Cliente activo (`Estado = true`) requerido al registrar mascota
+- Validación de campos obligatorios en cliente (jQuery Validate)
+
+## Restaurar paquetes (línea de comandos)
+
+```powershell
+nuget restore Practica2.Web.sln -PackagesDirectory packages
+msbuild Practica2.Web.sln /p:Configuration=Debug
+```
+
+## Nota sobre EF
+
+Las entidades en `EF/` están mapeadas manualmente contra la BD existente. En Visual Studio puede regenerar un EDMX Database First si lo prefiere; no modifique el esquema de `Practica2`.

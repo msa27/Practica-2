@@ -1,0 +1,128 @@
+body {
+    font-family: "Nunito", sans-serif;
+    background-color: #f2f7ff;
+}
+
+#app {
+    display: flex;
+    min-height: 100vh;
+}
+
+#sidebar {
+    width: 260px;
+    background: #fff;
+    border-right: 1px solid #e9ecef;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 100;
+}
+
+.sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.sidebar-menu {
+    padding: 1rem 0;
+}
+
+.sidebar-title {
+    padding: 0.5rem 1.5rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #6c757d;
+    font-weight: 700;
+    list-style: none;
+}
+
+.sidebar-item {
+    list-style: none;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    color: #25396f;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.sidebar-link:hover {
+    background: #f0f4ff;
+    color: #435ebe;
+}
+
+#main {
+    margin-left: 260px;
+    flex: 1;
+    padding: 1.5rem 2rem;
+}
+
+.page-title h3 {
+    font-weight: 700;
+    color: #25396f;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 2px 6px rgba(67, 94, 190, 0.1);
+    border-radius: 0.75rem;
+}
+
+.card-header {
+    background: #fff;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.form-control-xl {
+    padding: 0.75rem 1rem 0.75rem 2.75rem;
+    font-size: 1rem;
+    border-radius: 0.5rem;
+}
+
+.has-icon-left .form-control-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #adb5bd;
+    z-index: 5;
+}
+
+.btn-primary {
+    background-color: #435ebe;
+    border-color: #435ebe;
+}
+
+.btn-primary:hover {
+    background-color: #364b96;
+    border-color: #364b96;
+}
+
+.alert.text-danger {
+    background-color: #f3616d;
+    color: #fff;
+    border: none;
+}
+
+footer {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+}
+
+@media (max-width: 768px) {
+    #sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+
+    #main {
+        margin-left: 0;
+    }
+}

@@ -49,9 +49,11 @@ _ReSharper*/
 *.svclog
 *.scc
 
-# NuGet
-**/packages/*
-!**/packages/build/
+# NuGet CLI (local restore helper)
+nuget.exe
+
+# NuGet packages folder (restore via nuget restore)
+packages/
 
 # Cursor: keep project rules, ignore other IDE data
 .cursor/*
