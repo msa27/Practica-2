@@ -1,0 +1,53 @@
+---
+description: Patrones de controladores MVC para Practica 2
+globs: RepoKN/KN_WEB/Controllers/**/*.cs
+alwaysApply: false
+---
+
+# Controladores (Practica 2)
+
+Seguir `HomeController.cs` al crear `ClientesController`, `MascotasController`, etc.
+
+## Estructura
+
+```csharp
+readonly UtilitarioService utilitario = new UtilitarioService();
+
+#region Registro de clientes
+
+[HttpGet]
+public ActionResult Registrar() { /* return View(); */ }
+
+[HttpPost]
+public ActionResult Registrar(ClienteModel model)
+{
+    try
+    {
+        using (var context = new KN_BDEntities())
+        {
+            var existe = (from C in context.Clientes
+                          where C.Cedula == model.Cedula
+                          select C).FirstOrDefault();
+            // ...
+        }
+    }
+    catch (Exception ex)
+    {
+        utilitario.RegistrarErrorBitacora(ex.Message, "RegistrarCliente", 0);
+        return View("Error");
+    }
+}
+
+#endregion
+```
+
+## Reglas
+
+- Heredar de `Controller`; `[HttpGet]` / `[HttpPost]` explícitos
+- Agrupar con `#region` por funcionalidad
+- Contexto EF en `using`, nunca como campo de clase
+- Consultas con **sintaxis LINQ query** (`from ... where ... select`)
+- Mapear ViewModel → entidad EF al insertar/actualizar
+- Éxito: `RedirectToAction(...)`; fallo de negocio: `ViewBag.Mensaje` + `return View()`
+- Validar `SaveChanges() > 0` antes de redirigir
+- Comentarios `//` en español sobre la intención de negocio

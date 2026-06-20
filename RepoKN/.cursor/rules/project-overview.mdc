@@ -1,0 +1,38 @@
+---
+description: Stack, estructura de carpetas y convenciones del proyecto RepoKN
+globs: KN_WEB/**
+alwaysApply: false
+---
+
+# RepoKN — Visión general (plantilla de referencia)
+
+Proyecto web ASP.NET MVC 5 en `KN_WEB/`. **Solo consulta de patrones** — no confundir con reglas de Practica 2.
+
+## Stack
+
+- ASP.NET MVC 5, .NET Framework 4.8.1
+- Entity Framework 6 Database First (EDMX en `EF/`)
+- SQL Server, Bootstrap + plantilla Mazer, jQuery Validation
+- BD plantilla: `KN_BD` (`BD Semana.sql`)
+
+## Carpetas (`KN_WEB/`)
+
+| Carpeta | Uso |
+|---------|-----|
+| `Controllers/` | Controladores MVC (`{Entidad}Controller`) |
+| `Models/` | ViewModels (`{Entidad}Model`), no entidades EF |
+| `EF/` | Entidades EDMX y contexto `KN_BDEntities` |
+| `Servicios/` | Servicios compartidos (`{Proposito}Service`) |
+| `Views/{Controller}/` | Vistas Razor por controlador |
+| `Scripts/` | Validación jQuery por formulario |
+
+## Convenciones de nombres (código C#)
+
+- **Namespace**: `KN_WEB`, sub-namespaces según carpeta
+- **ViewModels**: `{Entidad}Model` en `Models/` (POCOs sin DataAnnotations)
+- **Servicios**: `{Proposito}Service` en `Servicios/`
+- **Propiedades**: PascalCase en español (`CorreoElectronico`, `Identificacion`)
+
+## Idioma
+
+- UI, mensajes de validación y comentarios de negocio: **español**

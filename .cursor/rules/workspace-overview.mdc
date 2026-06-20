@@ -1,0 +1,20 @@
+---
+description: Estructura del workspace y materiales del curso
+alwaysApply: true
+---
+
+# Workspace Practica 2
+
+## Contenido
+
+| Ubicación | Propósito |
+|-----------|-----------|
+| `Database script.txt` | Esquema BD `Practica2` (Clientes, Mascotas) |
+| `Enunciado Práctica 2.pdf` | Requisitos funcionales de la práctica |
+| `RepoKN/` | Plantilla de referencia (solo consulta de patrones) |
+
+## Desarrollo
+
+- El proyecto web MVC se implementa en `RepoKN/KN_WEB/`, extendiendo la plantilla KN.
+- Patrones de la plantilla: reglas en `RepoKN/.cursor/rules/`.
+- Dominio y requisitos de Practica 2: reglas `practica2-*.mdc` en esta carpeta (`.cursor/rules/`).

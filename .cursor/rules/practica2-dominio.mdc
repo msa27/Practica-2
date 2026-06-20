@@ -1,0 +1,42 @@
+---
+description: Dominio Clientes/Mascotas y mapeo a código
+globs: RepoKN/KN_WEB/**
+alwaysApply: false
+---
+
+# Dominio Practica 2
+
+Script: `Database script.txt` (raíz del workspace). BD: `Practica2`.
+
+## Relación
+
+`Clientes` (1) → `Mascotas` (N) vía `Mascotas.IdCliente`.
+
+## Entidades → código
+
+| Tabla | ViewModel | Controlador |
+|-------|-----------|-------------|
+| `Clientes` | `ClienteModel` | `ClientesController` |
+| `Mascotas` | `MascotaModel` | `MascotasController` |
+
+## Columnas clave
+
+**Clientes:** `IdCliente`, `Cedula`, `Nombre`, `Correo`, `Estado` (bit)
+
+**Mascotas:** `IdMascota`, `Nombre`, `Especie`, `Raza`, `Peso` (decimal 8,2), `IdCliente`
+
+## Requisitos (enunciado)
+
+- Layout: bienvenida + 3 menús (Registro Clientes, Registro Mascotas, Consulta Mascotas)
+- Cédula de cliente no repetida
+- Máximo 2 mascotas de la misma especie por cliente
+- Todos los campos de formularios obligatorios
+- Consulta: cédula/nombre cliente, nombre/especie/peso mascota
+
+## Implementación
+
+1. Regenerar EDMX contra `Practica2`
+2. Seguir patrones de `HomeController` / `Registro.cshtml`
+3. Validar cédula/correo duplicados antes de insertar (patrón `existeUsuario`)
+4. En Mascotas: cliente existente y activo (`Estado == true`)
+5. Bitácora de errores con `UtilitarioService` (`tbError` / `spRegistrarError`)

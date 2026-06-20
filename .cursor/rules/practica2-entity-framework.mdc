@@ -1,0 +1,40 @@
+---
+description: EF6 Database First para Practica 2
+globs: RepoKN/KN_WEB/{EF,Servicios,Controllers}/**/*
+alwaysApply: false
+---
+
+# Entity Framework 6 (Practica 2)
+
+## No editar código generado
+
+Archivos en `EF/` son auto-generados desde EDMX. Regenerar en Visual Studio tras cambios en `Practica2`.
+
+## Uso del contexto
+
+```csharp
+using (var context = new KN_BDEntities())
+{
+    var cliente = (from C in context.Clientes
+                   where C.Cedula == model.Cedula
+                   select C).FirstOrDefault();
+
+    context.Clientes.Add(new Clientes { Cedula = model.Cedula, Estado = true });
+    context.SaveChanges();
+}
+```
+
+## Separación de capas
+
+- **Entidades EF** (`Clientes`, `Mascotas`) → carpeta `EF/`
+- **ViewModels** (`ClienteModel`) → carpeta `Models/`
+- Nunca pasar entidades EF a vistas: `@model KN_WEB.Models.ClienteModel`
+
+## Relaciones
+
+- `Mascotas.IdCliente` → FK a `Clientes.IdCliente`
+- Dropdown clientes: LINQ sobre `context.Clientes` con `Estado == true`
+
+## SPs
+
+Reutilizar `spRegistrarError` vía `UtilitarioService`. Nuevos SPs: prefijo `sp`, parámetros `@PascalCase`.

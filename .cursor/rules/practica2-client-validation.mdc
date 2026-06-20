@@ -1,0 +1,40 @@
+---
+description: jQuery Validate para formularios Practica 2
+globs: RepoKN/KN_WEB/Scripts/**/*.js
+alwaysApply: false
+---
+
+# Validación cliente (Practica 2)
+
+Un archivo por formulario en `Scripts/` (ej. `registrar-cliente.js`, `registrar-mascota.js`).
+
+```javascript
+$(document).ready(function () {
+  $('#RegistrarClienteForm').validate({
+    rules: {
+      Cedula: { required: true },
+      Nombre: { required: true },
+      Correo: { required: true, email: true }
+    },
+    messages: {
+      Cedula: { required: 'Campo obligatorio.' },
+      Correo: { required: 'Campo obligatorio.', email: 'Formato no válido.' }
+    },
+    errorElement: 'span',
+    errorClass: 'text-danger small',
+    errorPlacement: function (error, element) {
+      error.insertAfter(element.closest('.form-group'));
+    },
+    highlight: function (element) { $(element).addClass('is-invalid'); },
+    unhighlight: function (element) { $(element).removeClass('is-invalid'); }
+  });
+});
+```
+
+## Reglas
+
+- Mensajes en **español**
+- Claves de `rules`/`messages` = nombres exactos del ViewModel
+- `id` del form = `{Accion}Form`; script en `@section scripts`
+- Contraseñas (si aplica): `minlength: 5` + regla `specialChar` (ver `index.js`)
+- Mascotas: validar `Peso` numérico (`number: true`, `min: 0.01`)

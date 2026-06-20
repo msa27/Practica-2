@@ -1,0 +1,47 @@
+---
+description: Patrones de controladores MVC en RepoKN
+globs: KN_WEB/Controllers/**/*.cs
+alwaysApply: false
+---
+
+# Controladores (RepoKN)
+
+## Estructura
+
+- Heredar de `Controller`
+- Agrupar acciones con `#region` (ej. `#region Autenticación de usuarios`)
+- Servicio compartido como campo `readonly` a nivel de clase
+- Decorar acciones con `[HttpGet]` / `[HttpPost]` explícitos
+
+```csharp
+readonly UtilitarioService utilitario = new UtilitarioService();
+
+[HttpPost]
+public ActionResult Registro(UsuarioModel model)
+{
+    try
+    {
+        using (var context = new KN_BDEntities())
+        {
+            var existe = (from U in context.tbUsuario
+                          where U.Identificacion == model.Identificacion
+                          select U).FirstOrDefault();
+            // ...
+        }
+    }
+    catch (Exception ex)
+    {
+        utilitario.RegistrarErrorBitacora(ex.Message, "Registro", 0);
+        return View("Error");
+    }
+}
+```
+
+## Acceso a datos
+
+- Contexto EF dentro de `using`, nunca como campo de clase
+- Consultas con **sintaxis LINQ query** (`from ... where ... select`)
+- Mapear ViewModel → entidad EF al insertar
+- Éxito: `RedirectToAction("Action", "Controller")`
+- Fallo de negocio: `ViewBag.Mensaje` + `return View()`
+- Comentarios `//` en español explicando la intención de negocio

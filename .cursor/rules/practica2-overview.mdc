@@ -1,0 +1,32 @@
+---
+description: Stack y estructura para desarrollar Practica 2 en KN_WEB
+globs: RepoKN/KN_WEB/**
+alwaysApply: false
+---
+
+# Practica 2 — Desarrollo (estilo RepoKN)
+
+## Referencia
+
+Analizar `RepoKN/KN_WEB/` como plantilla. Replicar su estructura y convenciones al implementar Clientes/Mascotas.
+
+## Stack
+
+ASP.NET MVC 5, .NET Framework 4.8.1, EF6 Database First (EDMX en `EF/`), SQL Server, Bootstrap + Mazer, jQuery Validation.
+
+## Carpetas (`RepoKN/KN_WEB/`)
+
+| Carpeta | Uso |
+|---------|-----|
+| `Controllers/` | `{Entidad}Controller` (ej. `ClientesController`, `MascotasController`) |
+| `Models/` | ViewModels `{Entidad}Model` — no entidades EF |
+| `EF/` | Entidades EDMX y contexto (regenerar tras cambios en BD `Practica2`) |
+| `Servicios/` | `{Proposito}Service` compartidos |
+| `Views/{Controller}/` | Vistas Razor por controlador |
+| `Scripts/` | Validación jQuery por formulario |
+
+## Convenciones C#
+
+- Namespace: `KN_WEB` (+ sub-namespace según carpeta)
+- Propiedades PascalCase en español, alineadas con columnas SQL
+- UI, mensajes y comentarios de negocio: **español**

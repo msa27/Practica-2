@@ -1,0 +1,30 @@
+---
+description: ViewModels POCO para Practica 2
+globs: RepoKN/KN_WEB/Models/**/*.cs
+alwaysApply: false
+---
+
+# ViewModels (Practica 2)
+
+POCOs simples en `Models/`, separados de entidades EF (`EF/`).
+
+```csharp
+namespace KN_WEB.Models
+{
+    public class ClienteModel
+    {
+        public string Cedula { get; set; }
+        public string Nombre { get; set; }
+        public string Correo { get; set; }
+        public bool Estado { get; set; }
+    }
+}
+```
+
+## Reglas
+
+- Nombre: `{Entidad}Model` (`ClienteModel`, `MascotaModel`)
+- Sin `[Required]`, `[StringLength]` ni DataAnnotations — validación en `Scripts/*.js`
+- Propiedades PascalCase español, coherentes con columnas de `Practica2`
+- Incluir `IdCliente`/`IdMascota` solo en edición o FK (`MascotaModel.IdCliente`)
+- Para listas desplegables: `List<SelectListItem>` en el ViewModel o `ViewBag`

@@ -1,0 +1,33 @@
+---
+description: Bitácora y mensajes al usuario (Practica 2)
+globs: RepoKN/KN_WEB/{Controllers,Servicios}/**/*
+alwaysApply: false
+---
+
+# Manejo de errores (Practica 2)
+
+## Bitácora centralizada
+
+Usar `UtilitarioService` — no llamar `spRegistrarError` directamente:
+
+```csharp
+catch (Exception ex)
+{
+    utilitario.RegistrarErrorBitacora(ex.Message, "RegistrarMascota", 0);
+    return View("Error");
+}
+```
+
+Parámetros: `(mensaje, lugar, consecutivoUsuario)`. Usar `0` sin sesión activa.
+
+## Mensajes al usuario
+
+- Fallos de negocio: `ViewBag.Mensaje` en español genérico
+  - `"La información no se ha podido registrar"`
+  - `"La información no se ha podido actualizar"`
+- No exponer `ex.Message` ni stack traces al usuario
+- Excepciones no controladas: `return View("Error")`
+
+## Filtro global
+
+`FilterConfig` registra `HandleErrorAttribute`. Mantener try/catch en acciones con BD.

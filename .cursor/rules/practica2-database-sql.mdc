@@ -1,0 +1,25 @@
+---
+description: Convenciones SQL — plantilla KN y Practica2
+globs: "**/*.sql"
+alwaysApply: false
+---
+
+# Convenciones SQL (Practica 2)
+
+## Plantilla KN (`RepoKN/BD Semana.sql` → `KN_BD`)
+
+- Tablas: `tb` + entidad (`tbUsuario`, `tbError`)
+- PK: `Consecutivo INT IDENTITY`, `PK_tb{Entidad}`
+- SPs: `sp{Accion}`, parámetros `@PascalCase`, variables `@v{Nombre}`
+
+## Practica 2 (`Database script.txt` → `Practica2`)
+
+- Tablas plural sin `tb`: `Clientes`, `Mascotas`
+- PK: `Id{Entidad} BIGINT IDENTITY`, `PK_{Entidad}`
+- FK: `FK_Mascotas_Clientes` con `WITH CHECK ADD`
+- **No modificar** tablas del script adjunto
+
+## Formato común
+
+- `USE [BaseDatos]`, separadores `GO`, esquema `dbo.` explícito
+- Columnas PascalCase español alineadas con ViewModels C#

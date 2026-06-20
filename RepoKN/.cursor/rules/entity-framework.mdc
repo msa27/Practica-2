@@ -1,0 +1,39 @@
+---
+description: Entity Framework 6 Database First (RepoKN)
+globs: KN_WEB/{EF,Servicios,Controllers}/**/*
+alwaysApply: false
+---
+
+# Entity Framework 6 (RepoKN)
+
+## No editar código generado
+
+Archivos en `EF/` son auto-generados desde EDMX. No modificar a mano:
+
+- `tb*.cs`, `Model1.Context.cs`, `sp*_Result.cs`
+
+Regenerar desde Visual Studio tras cambios en BD o SPs.
+
+## Uso del contexto
+
+```csharp
+using (var context = new KN_BDEntities())
+{
+    var usuario = (from U in context.tbUsuario
+                   where U.CorreoElectronico == model.CorreoElectronico
+                   select U).FirstOrDefault();
+
+    context.tbUsuario.Add(new tbUsuario { /* mapear propiedades */ });
+    context.SaveChanges();
+}
+```
+
+## Separación de capas
+
+- **Entidades EF** (`tbUsuario`) → forma de BD, carpeta `EF/`
+- **ViewModels** (`UsuarioModel`) → binding de vistas, carpeta `Models/`
+- Nunca pasar entidades EF a Razor; usar `@model KN_WEB.Models.{Entidad}Model`
+
+## SPs
+
+Preferir SPs existentes (`spIniciarSesion`, `spRegistrarError`). Para errores usar `UtilitarioService.RegistrarErrorBitacora`.
