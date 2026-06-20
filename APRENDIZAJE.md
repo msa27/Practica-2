@@ -2,6 +2,32 @@
 
 Esta guía explica **qué hace el proyecto**, **cómo está organizado** y **por qué** se tomaron ciertas decisiones técnicas. Está pensada para que un estudiante pueda repasar la práctica sin depender solo del código fuente.
 
+**Importante:** todo lo descrito en las secciones 2–8 corresponde a **código real** en `Practica2.Web/`, no a diseños pendientes. La sección 0 resume qué archivos existen y qué queda fuera de alcance.
+
+---
+
+## 0. Inventario de implementación (auditoría)
+
+| Componente | Archivo(s) | Estado |
+|------------|------------|--------|
+| Página de inicio | `Controllers/HomeController.cs`, `Views/Home/Index.cshtml` | Implementado |
+| Registro de clientes (GET/POST) | `Controllers/ClientesController.cs`, `Views/Clientes/Registrar.cshtml` | Implementado |
+| Registro de mascotas (GET/POST) | `Controllers/MascotasController.cs`, `Views/Mascotas/Registrar.cshtml` | Implementado |
+| Consulta de mascotas (JOIN LINQ) | `MascotasController.Consultar`, `Views/Mascotas/Consultar.cshtml` | Implementado |
+| ViewModels | `Models/ClienteModel.cs`, `MascotaModel.cs`, `ConsultaMascotaModel.cs` | Implementado |
+| Entity Framework 6 | `EF/Clientes.cs`, `EF/Mascotas.cs`, `EF/Practica2Entities.cs` | Implementado |
+| Validación jQuery | `Scripts/registrar-cliente.js`, `Scripts/registrar-mascota.js` | Implementado |
+| Layout + menú lateral | `Views/Shared/_Layout.cshtml`, `Content/site.css` | Implementado |
+| Manejo de errores | try/catch en controladores, `Views/Shared/Error.cshtml`, `Servicios/UtilitarioService.cs` | Implementado |
+| Reglas de negocio en servidor | Cédula única, cliente activo, máx. 2 mascotas/especie | Implementado en controladores |
+
+**No implementado** (mencionado solo como ideas futuras en la sección 10):
+
+- Validación servidor de campos vacíos con `[Required]` / `ModelState.IsValid` (hoy depende de jQuery + columnas `NOT NULL` en SQL).
+- Pantalla para dar de baja clientes (`Estado = false`).
+- Bitácora de errores en tabla SQL (solo `Trace.WriteLine`).
+- Pruebas unitarias automatizadas.
+
 ---
 
 ## 1. ¿Qué es este proyecto y qué problema resuelve?
@@ -208,7 +234,7 @@ Ejemplo en registro de cliente (`Scripts/registrar-cliente.js`):
 - `Correo`: debe ser email válido.
 - Mensajes en español: *"Campo obligatorio."*
 
-La validación del **servidor** (controlador) sigue siendo necesaria: el usuario podría desactivar JavaScript o manipular la petición HTTP.
+En el **servidor**, los controladores validan las **reglas de negocio** (cédula duplicada, cliente activo, límite de mascotas). Los campos obligatorios del formulario se validan en el **navegador** con jQuery; si alguien desactiva JavaScript, la BD rechazaría un `INSERT` con valores nulos gracias a las columnas `NOT NULL`, pero no hay comprobación explícita de campos vacíos en C#.
 
 ### 3.6 Servicios
 
@@ -295,11 +321,13 @@ La comparación de `Especie` es **exacta** (mayúsculas/minúsculas importan seg
 
 ### 4.4 Todos los campos obligatorios
 
-| Capa | Mecanismo |
-|------|-----------|
-| Cliente | jQuery: `required` + `email` en correo |
-| Mascota | jQuery: `required`, `number`, `min: 0.01` en peso |
-| BD | Columnas `NOT NULL` en script SQL |
+| Capa | Mecanismo | ¿Implementado? |
+|------|-----------|------------------|
+| Cliente (navegador) | jQuery: `required` + `email` en correo | Sí — `Scripts/registrar-cliente.js` |
+| Mascota (navegador) | jQuery: `required`, `number`, `min: 0.01` en peso | Sí — `Scripts/registrar-mascota.js` |
+| Servidor (reglas de negocio) | Cédula única, cliente activo, límite por especie | Sí — controladores |
+| Servidor (campos vacíos) | `[Required]` / `ModelState` | **No** — ver sección 10 |
+| BD | Columnas `NOT NULL` en script SQL | Sí — `Database script.txt` |
 
 ### 4.5 Consulta de mascotas
 
@@ -462,16 +490,17 @@ Después de estudiar este proyecto, deberías poder explicar:
 
 ## 9. Verificación realizada en este entorno
 
-Al documentar la práctica se ejecutaron comprobaciones automáticas:
+Comprobaciones ejecutadas al auditar el repositorio (junio 2026):
 
-| Prueba | Resultado |
-|--------|-----------|
-| BD `Practica2` en localhost | Existe |
-| Tablas `Clientes`, `Mascotas` | Correctas |
-| FK `FK_Mascotas_Clientes` | Presente |
-| Compilación `Practica2.Web.sln` (MSBuild Debug) | Sin errores |
+| Prueba | Resultado | Cómo comprobarlo |
+|--------|-----------|------------------|
+| BD `Practica2` en localhost | Existe | `sqlcmd -S localhost -E -Q "SELECT name FROM sys.databases WHERE name = 'Practica2'"` |
+| Tablas `Clientes`, `Mascotas` | Presentes | Script `Database script.txt` + consulta a `INFORMATION_SCHEMA` |
+| FK `FK_Mascotas_Clientes` | Presente | Definida en el script SQL |
+| Compilación `Practica2.Web.sln` (MSBuild Debug) | Sin errores | MSBuild genera `Practica2.Web.dll` |
+| Código fuente de pantallas y reglas | Implementado | Ver sección 0 |
 
-La base de datos estaba vacía (0 clientes, 0 mascotas), lo cual es normal antes de las pruebas manuales en el navegador.
+La base de datos estaba vacía (0 clientes, 0 mascotas), lo cual es normal antes de las pruebas manuales en el navegador (F5 en Visual Studio).
 
 ---
 

@@ -3,7 +3,8 @@
 > **Proyecto:** `Practica2.Web` (ASP.NET MVC 5)  
 > **Base de datos:** `Practica2` en SQL Server (`localhost`)  
 > **Repositorio:** https://github.com/msa27/Practica-2.git  
-> **Estado base:** commit `56041d3+` — aplicación funcional implementada
+> **Estado base:** commit `56041d3+` — aplicación funcional implementada  
+> **Auditoría (jun 2026):** el código en `Practica2.Web/` coincide con las fases 0–6. La documentación describe código existente, no diseños pendientes. Ver `APRENDIZAJE.md` sección 0 para el inventario archivo por archivo.
 
 ---
 
@@ -15,7 +16,7 @@ Desarrollar una aplicación web con **ASP.NET MVC 5** que permita a una clínica
 2. **Registrar mascotas** asociadas a un cliente activo (máximo 2 mascotas de la misma especie por cliente).
 3. **Consultar mascotas** mostrando cédula y nombre del cliente, nombre de la mascota, especie y peso.
 
-La interfaz debe incluir una página de bienvenida y un menú lateral con las tres opciones anteriores. Todos los campos de los formularios son obligatorios y deben validarse en el cliente (jQuery Validate) y en el servidor (reglas de negocio en controladores).
+La interfaz debe incluir una página de bienvenida y un menú lateral con las tres opciones anteriores. Los campos obligatorios se validan en el **cliente** con jQuery Validate; en el **servidor** se aplican las **reglas de negocio** en los controladores (no hay `[Required]`/`ModelState` para campos vacíos).
 
 ---
 
@@ -130,11 +131,12 @@ La interfaz debe incluir una página de bienvenida y un menú lateral con las tr
 
 | Paso | Descripción | Estado |
 |------|-------------|--------|
-| 7.1 | Verificar BD con `sqlcmd` | Ejecutado |
-| 7.2 | Compilar solución con MSBuild | Ejecutado |
-| 7.3 | Pruebas manuales en IIS Express | Pendiente usuario |
-| 7.4 | Empaquetar entrega campus | Pendiente usuario |
-| 7.5 | Documentación `PLAN.md` y `APRENDIZAJE.md` | Este documento |
+| 7.1 | Verificar BD con `sqlcmd` | ✅ Ejecutado (jun 2026) |
+| 7.2 | Compilar solución con MSBuild | ✅ Ejecutado (jun 2026) |
+| 7.3 | Auditar código vs documentación | ✅ Ejecutado — ver `APRENDIZAJE.md` §0 |
+| 7.4 | Pruebas manuales en IIS Express | Pendiente usuario |
+| 7.5 | Empaquetar entrega campus | Pendiente usuario |
+| 7.6 | Documentación `PLAN.md` y `APRENDIZAJE.md` | Actualizada tras auditoría |
 
 ---
 
@@ -269,15 +271,16 @@ git push origin main
 
 ## 8. Resultados de ejecución del plan (verificación automatizada)
 
+Última verificación: **junio 2026** (auditoría código + `sqlcmd` + MSBuild).
+
 | Verificación | Resultado | Detalle |
 |--------------|-----------|---------|
+| Código fuente fases 0–6 | ✅ OK | Controladores, vistas, EF, scripts y layout presentes |
 | BD `Practica2` existe | ✅ OK | Confirmado con `sqlcmd` |
 | Tablas `Clientes`, `Mascotas` | ✅ OK | 2 tablas base |
-| FK `FK_Mascotas_Clientes` | ✅ OK | Presente |
-| Esquema columnas | ✅ OK | 11 columnas, tipos correctos |
-| Cédulas duplicadas | ✅ OK | 0 filas (BD vacía o sin duplicados) |
-| >2 mascotas/especie | ✅ OK | 0 filas |
+| FK `FK_Mascotas_Clientes` | ✅ OK | Presente en script SQL |
 | Compilación MSBuild Debug | ✅ OK | `Practica2.Web.dll` generado sin errores |
+| Pruebas manuales navegador | ⏳ Pendiente | Requiere F5 en Visual Studio |
 
 ---
 
