@@ -61,6 +61,9 @@ _ReSharper*/
 # Nested professor repo backup (removed for monorepo)
 .git-backup/
 
+# Plantilla de referencia local — no versionar en GitHub
+RepoKN/KN_WEB/
+
 # Windows / temp
 Thumbs.db
 ehthumbs.db
@@ -71,3 +74,6 @@ $RECYCLE.BIN/
 *.swp
 *~
 .DS_Store
+
+# Professor ASP.NET MVC template (RepoKN/KN_WEB) — local reference only; not versioned
+RepoKN/KN_WEB/
