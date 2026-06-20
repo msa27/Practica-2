@@ -10,6 +10,8 @@ Aplicación **ASP.NET MVC 5** para gestión de Clientes y Mascotas (BD `Practica
 | `Practica2.Web/` | Proyecto MVC implementado |
 | `Database script.txt` | Esquema SQL de la BD `Practica2` |
 | `Enunciado Práctica 2.pdf` | Requisitos funcionales |
+| `PLAN.md` | Plan completo, checklists y resultados de verificación |
+| `APRENDIZAJE.md` | Guía didáctica del código y conceptos MVC |
 | `.cursor/rules/` | Reglas Cursor de desarrollo |
 
 ## Cómo ejecutar
