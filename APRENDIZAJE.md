@@ -1,0 +1,487 @@
+# Guía de aprendizaje — Práctica 2: Clientes y Mascotas
+
+Esta guía explica **qué hace el proyecto**, **cómo está organizado** y **por qué** se tomaron ciertas decisiones técnicas. Está pensada para que un estudiante pueda repasar la práctica sin depender solo del código fuente.
+
+---
+
+## 1. ¿Qué es este proyecto y qué problema resuelve?
+
+Imagina una clínica veterinaria que necesita un sistema sencillo para:
+
+- Guardar datos de **dueños** (clientes): cédula, nombre y correo.
+- Registrar **mascotas** vinculadas a cada dueño: nombre, especie, raza y peso.
+- **Consultar** un listado de todas las mascotas con la información del dueño.
+
+El problema de negocio no es solo “guardar datos en una tabla”. Hay **reglas**:
+
+1. No puede haber dos clientes con la misma cédula.
+2. Solo se pueden registrar mascotas para clientes **activos**.
+3. Un mismo cliente no puede tener más de **2 mascotas de la misma especie** (por ejemplo, máximo 2 perros).
+4. Todos los campos de los formularios son **obligatorios**.
+
+La solución es una aplicación web **ASP.NET MVC 5** que separa responsabilidades en capas: interfaz (Views), lógica (Controllers), modelos de pantalla (ViewModels) y persistencia (Entity Framework 6 + SQL Server).
+
+---
+
+## 2. Arquitectura MVC paso a paso
+
+**MVC** significa *Model–View–Controller* (Modelo–Vista–Controlador). Cada pieza tiene un rol claro:
+
+| Letra | Significado | En este proyecto |
+|-------|-------------|------------------|
+| **M** | Model | Datos que viajan entre capas: `ClienteModel`, `MascotaModel`, entidades EF |
+| **V** | View | Páginas HTML generadas con Razor (`.cshtml`) |
+| **C** | Controller | Clases que reciben peticiones HTTP y deciden qué hacer |
+
+### Flujo general
+
+```
+Usuario → URL → RouteConfig → Controller → (EF/SQL) → View → HTML al navegador
+```
+
+1. El usuario escribe una URL, por ejemplo `/Clientes/Registrar`.
+2. **RouteConfig** interpreta `{controller}/{action}` y llama a `ClientesController.Registrar()`.
+3. El **controlador** consulta o guarda datos con Entity Framework.
+4. Devuelve una **vista** Razor que se convierte en HTML.
+5. El navegador muestra la página y ejecuta JavaScript de validación.
+
+La ruta por defecto está en `App_Start/RouteConfig.cs`:
+
+```12:16:Practica2.Web/App_Start/RouteConfig.cs
+            routes.MapRoute(
+                name: "Default",
+                url: "{controller}/{action}/{id}",
+                defaults: new { controller = "Home", action = "Index", id = UrlParameter.Optional }
+            );
+```
+
+Esto significa que `/` abre `HomeController.Index`, y `/Mascotas/Consultar` abre `MascotasController.Consultar`.
+
+---
+
+## 3. Cómo funciona cada capa
+
+### 3.1 Controllers (controladores)
+
+Los controladores son el “cerebro” de cada pantalla. Hay tres:
+
+| Controlador | Responsabilidad |
+|-------------|-----------------|
+| `HomeController` | Página de bienvenida |
+| `ClientesController` | Alta de clientes |
+| `MascotasController` | Alta y consulta de mascotas |
+
+Patrón usado en todos: **try/catch**, registro de error con `UtilitarioService`, y retorno de `View("Error")` si algo falla.
+
+Ejemplo mínimo en Home:
+
+```13:25:Practica2.Web/Controllers/HomeController.cs
+        [HttpGet]
+        public ActionResult Index()
+        {
+            try
+            {
+                return View();
+            }
+            catch (Exception ex)
+            {
+                utilitario.RegistrarErrorBitacora(ex.Message, "Index", 0);
+                return View("Error");
+            }
+        }
+```
+
+- `[HttpGet]` indica que la acción responde a peticiones GET (abrir la página).
+- `[HttpPost]` se usa cuando el formulario envía datos (POST).
+
+### 3.2 Models / ViewModels
+
+En `Models/` **no** están las entidades de base de datos. Son **ViewModels**: objetos adaptados a lo que la vista necesita mostrar o recibir del formulario.
+
+**ClienteModel** — solo los campos del formulario de registro:
+
+```3:8:Practica2.Web/Models/ClienteModel.cs
+    public class ClienteModel
+    {
+        public string Cedula { get; set; }
+        public string Nombre { get; set; }
+        public string Correo { get; set; }
+    }
+```
+
+**MascotaModel** — incluye además una lista para el dropdown de clientes:
+
+```6:14:Practica2.Web/Models/MascotaModel.cs
+    public class MascotaModel
+    {
+        public string Nombre { get; set; }
+        public string Especie { get; set; }
+        public string Raza { get; set; }
+        public decimal Peso { get; set; }
+        public long IdCliente { get; set; }
+        public IEnumerable<SelectListItem> Clientes { get; set; }
+    }
+```
+
+**ConsultaMascotaModel** — proyección de solo lectura para la tabla de consulta (no edita, solo muestra).
+
+**¿Por qué separar ViewModel de entidad EF?**  
+La entidad `Clientes` tiene `IdCliente`, `Estado`, relación con `Mascotas`, etc. El formulario de registro no necesita todo eso. Separar capas evita acoplar la UI al esquema de BD.
+
+### 3.3 Views (vistas Razor)
+
+Las vistas viven en `Views/{NombreControlador}/{Accion}.cshtml`.
+
+Características importantes:
+
+- `@model` declara el tipo de datos que recibe la vista.
+- `Layout = "~/Views/Shared/_Layout.cshtml"` reutiliza menú y estilos.
+- `Html.BeginForm` genera el `<form>` con action y method correctos.
+- `Html.TextBoxFor(m => m.Cedula)` crea un input ligado al modelo.
+- `@section scripts` carga jQuery y validación al final de la página.
+
+El layout define el **menú lateral** con las tres opciones del enunciado y el mensaje de bienvenida:
+
+```25:44:Practica2.Web/Views/Shared/_Layout.cshtml
+                        <li class="sidebar-title">Menú</li>
+                        <li class="sidebar-item">
+                            <a href="@Url.Action("Registrar", "Clientes")" class="sidebar-link">
+                                ...
+                                <span>Registro de Clientes</span>
+                            </a>
+                        </li>
+                        ...
+                        <li class="sidebar-item">
+                            <a href="@Url.Action("Consultar", "Mascotas")" class="sidebar-link">
+                                ...
+                                <span>Consulta de Mascotas</span>
+                            </a>
+                        </li>
+```
+
+### 3.4 Entity Framework (capa EF)
+
+**Entity Framework 6** es el ORM: traduce objetos C# a tablas SQL y viceversa.
+
+- **Contexto:** `Practica2Entities` — puerta de entrada a la BD.
+- **DbSet:** colecciones `Clientes` y `Mascotas`.
+- **Entidades:** clases en `EF/` que reflejan tablas.
+
+La conexión se lee de `Web.config`:
+
+```58:60:Practica2.Web/Web.config
+  <connectionStrings>
+    <add name="Practica2Entities" connectionString="data source=localhost;initial catalog=Practica2;integrated security=True;..." providerName="System.Data.SqlClient" />
+  </connectionStrings>
+```
+
+El contexto usa ese nombre:
+
+```7:13:Practica2.Web/EF/Practica2Entities.cs
+        public Practica2Entities()
+            : base("name=Practica2Entities")
+        {
+        }
+
+        public virtual DbSet<Clientes> Clientes { get; set; }
+        public virtual DbSet<Mascotas> Mascotas { get; set; }
+```
+
+La relación **1 cliente → N mascotas** se configura con clave foránea:
+
+```67:70:Practica2.Web/EF/Practica2Entities.cs
+            modelBuilder.Entity<Mascotas>()
+                .HasRequired(m => m.Clientes)
+                .WithMany(c => c.Mascotas)
+                .HasForeignKey(m => m.IdCliente);
+```
+
+En SQL esto corresponde a `FK_Mascotas_Clientes` del script `Database script.txt`.
+
+### 3.5 Scripts (validación en el navegador)
+
+Antes de que el formulario llegue al servidor, **jQuery Validation** comprueba campos obligatorios y formatos.
+
+Ejemplo en registro de cliente (`Scripts/registrar-cliente.js`):
+
+- `Cedula`, `Nombre`, `Correo`: obligatorios.
+- `Correo`: debe ser email válido.
+- Mensajes en español: *"Campo obligatorio."*
+
+La validación del **servidor** (controlador) sigue siendo necesaria: el usuario podría desactivar JavaScript o manipular la petición HTTP.
+
+### 3.6 Servicios
+
+`UtilitarioService` centraliza el registro de errores. En esta práctica escribe en `Trace` (visible en la ventana Output de Visual Studio al depurar):
+
+```8:16:Practica2.Web/Servicios/UtilitarioService.cs
+        public void RegistrarErrorBitacora(string mensaje, string lugar, int usuario)
+        {
+            Trace.WriteLine(string.Format(
+                "[{0:yyyy-MM-dd HH:mm:ss}] Lugar: {1} | Usuario: {2} | {3}",
+                DateTime.Now,
+                lugar,
+                usuario,
+                mensaje));
+        }
+```
+
+En un proyecto real podría llamar a un stored procedure (`spRegistrarError`) o escribir en tabla `tbError`.
+
+---
+
+## 4. Reglas de negocio con código de referencia
+
+### 4.1 Cédula única (no repetida)
+
+Al registrar un cliente, se busca si ya existe la cédula con **LINQ**:
+
+```37:46:Practica2.Web/Controllers/ClientesController.cs
+                    var existeCliente = (from C in context.Clientes
+                                         where C.Cedula == model.Cedula
+                                         select C).FirstOrDefault();
+
+                    if (existeCliente != null)
+                    {
+                        ViewBag.Mensaje = "La información no se ha podido registrar";
+                        return View(model);
+                    }
+```
+
+Si existe, no se inserta y se muestra el mensaje genérico de error (requisito del enunciado).
+
+### 4.2 Cliente activo para registrar mascota
+
+Solo clientes con `Estado == true` aparecen en el dropdown y pueden recibir mascotas:
+
+```142:144:Practica2.Web/Controllers/MascotasController.cs
+            var clientes = (from C in context.Clientes
+                            where C.Estado == true
+                            orderby C.Nombre
+```
+
+Al procesar el POST, se valida de nuevo:
+
+```38:48:Practica2.Web/Controllers/MascotasController.cs
+                    var cliente = (from C in context.Clientes
+                                   where C.IdCliente == model.IdCliente
+                                   select C).FirstOrDefault();
+
+                    if (cliente == null || cliente.Estado == false)
+                    {
+                        ViewBag.Mensaje = "La información no se ha podido registrar";
+                        ...
+                    }
+```
+
+**Doble validación:** la UI filtra inactivos, pero el servidor comprueba por si alguien altera el `IdCliente` enviado.
+
+### 4.3 Máximo 2 mascotas de la misma especie por cliente
+
+```50:61:Practica2.Web/Controllers/MascotasController.cs
+                    var cantidadMascotas = (from M in context.Mascotas
+                                            where M.IdCliente == model.IdCliente
+                                            && M.Especie == model.Especie
+                                            select M).Count();
+
+                    if (cantidadMascotas >= 2)
+                    {
+                        ViewBag.Mensaje = "La información no se ha podido registrar";
+                        ...
+                    }
+```
+
+La comparación de `Especie` es **exacta** (mayúsculas/minúsculas importan según lo guardado). En producción se podría normalizar con `.ToUpper()`.
+
+### 4.4 Todos los campos obligatorios
+
+| Capa | Mecanismo |
+|------|-----------|
+| Cliente | jQuery: `required` + `email` en correo |
+| Mascota | jQuery: `required`, `number`, `min: 0.01` en peso |
+| BD | Columnas `NOT NULL` en script SQL |
+
+### 4.5 Consulta de mascotas
+
+JOIN entre tablas proyectado a `ConsultaMascotaModel`:
+
+```102:112:Practica2.Web/Controllers/MascotasController.cs
+                    var lista = (from M in context.Mascotas
+                                 join C in context.Clientes on M.IdCliente equals C.IdCliente
+                                 orderby C.Nombre, M.Nombre
+                                 select new ConsultaMascotaModel
+                                 {
+                                     CedulaCliente = C.Cedula,
+                                     NombreCliente = C.Nombre,
+                                     NombreMascota = M.Nombre,
+                                     Especie = M.Especie,
+                                     Peso = M.Peso
+                                 }).ToList();
+```
+
+La vista muestra el peso con dos decimales: `@item.Peso.ToString("0.00")`.
+
+### 4.6 ViewBag para mensajes de error
+
+`ViewBag` es un diccionario dinámico del controlador a la vista. En Razor:
+
+```22:25:Practica2.Web/Views/Clientes/Registrar.cshtml
+                if (ViewBag.Mensaje != null)
+                {
+                    <div class="alert text-danger" role="alert">@ViewBag.Mensaje</div>
+                }
+```
+
+No forma parte del modelo fuerte (`ClienteModel`); es metadata de la respuesta (mensaje puntual).
+
+---
+
+## 5. Flujo de una petición HTTP
+
+### 5.1 Registro de cliente (POST)
+
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant B as Navegador
+    participant C as ClientesController
+    participant EF as Practica2Entities
+    participant DB as SQL Server
+
+    U->>B: Completa formulario y pulsa Procesar
+    B->>B: jQuery Validate (campos OK?)
+    B->>C: POST /Clientes/Registrar (ClienteModel)
+    C->>EF: Buscar cédula duplicada
+    EF->>DB: SELECT ... WHERE Cedula = @cedula
+    DB-->>EF: resultado
+    alt cédula duplicada
+        C-->>B: View(model) + ViewBag.Mensaje
+    else cédula libre
+        C->>EF: Add(Clientes) + SaveChanges()
+        EF->>DB: INSERT INTO Clientes
+        C-->>B: Redirect Home/Index
+    end
+```
+
+Pasos en código:
+
+1. **GET** `Registrar()` → vista vacía con `new ClienteModel()`.
+2. Usuario rellena y envía.
+3. **POST** `Registrar(ClienteModel model)` → validaciones → `SaveChanges()` → redirect o error.
+
+Tras insertar, el cliente queda con `Estado = true` automáticamente:
+
+```48:54:Practica2.Web/Controllers/ClientesController.cs
+                    context.Clientes.Add(new Clientes
+                    {
+                        Cedula = model.Cedula,
+                        Nombre = model.Nombre,
+                        Correo = model.Correo,
+                        Estado = true
+                    });
+```
+
+### 5.2 Registro de mascota (POST)
+
+1. **GET** `Registrar()` → `CargarModeloRegistro(0)` llena el dropdown.
+2. Usuario elige cliente, especie, etc.
+3. **POST** → validar cliente activo → contar especie → insertar → **redirect a Consultar**.
+
+```81:81:Practica2.Web/Controllers/MascotasController.cs
+                    return RedirectToAction("Consultar");
+```
+
+Tras registrar una mascota, el usuario ve de inmediato el listado actualizado.
+
+---
+
+## 6. Conceptos clave explicados
+
+### LINQ (Language Integrated Query)
+
+Permite escribir consultas en C# que EF traduce a SQL:
+
+```csharp
+from C in context.Clientes
+where C.Cedula == model.Cedula
+select C
+```
+
+Equivale conceptualmente a `SELECT * FROM Clientes WHERE Cedula = @cedula`. Ventaja: tipado en compile-time y menos SQL embebido en strings.
+
+### ViewBag
+
+Contenedor dinámico para pasar datos extra a la vista (mensajes, flags). No requiere cambiar la clase del modelo. Desventaja: sin IntelliSense ni validación de nombres en compilación.
+
+### jQuery Validate
+
+Plugin que lee reglas del objeto `rules` en JavaScript y muestra errores antes del POST. Se combina con `@Scripts.Render("~/bundles/jqueryval")` definido en `BundleConfig`.
+
+### Clave foránea (FK)
+
+`Mascotas.IdCliente` **debe** existir en `Clientes.IdCliente`. La BD rechaza un INSERT con `IdCliente` inválido. La regla de “cliente activo” es adicional y vive en C#, no solo en SQL.
+
+### `using (var context = new Practica2Entities())`
+
+El bloque `using` garantiza que el contexto EF se **dispose** al salir, liberando conexiones. Buena práctica en acciones cortas de MVC.
+
+### RedirectToAction vs return View
+
+- **Redirect:** nueva petición GET (patrón Post-Redirect-Get); evita reenviar formulario al refrescar.
+- **View:** misma petición; se usa cuando hay errores de validación y hay que mostrar el formulario otra vez con datos.
+
+---
+
+## 7. Base de datos (recordatorio)
+
+Script en `Database script.txt`:
+
+| Tabla | Columnas principales |
+|-------|---------------------|
+| `Clientes` | IdCliente (PK, identity), Cedula, Nombre, Correo, Estado (bit) |
+| `Mascotas` | IdMascota (PK), Nombre, Especie, Raza, Peso (decimal 8,2), IdCliente (FK) |
+
+Relación: **1:N** — un cliente, muchas mascotas.
+
+---
+
+## 8. Qué debería entender el estudiante al terminar
+
+Después de estudiar este proyecto, deberías poder explicar:
+
+1. **Qué hace MVC** y qué archivo tocar para cambiar la UI vs la lógica vs la BD.
+2. **Por qué hay ViewModels** además de entidades EF.
+3. **Cómo fluye una petición** desde la URL hasta `SaveChanges()`.
+4. **Dónde vive cada regla de negocio** (cédula única, 2 mascotas/especie, cliente activo).
+5. **Diferencia entre validación cliente (jQuery)** y **servidor (controlador)**.
+6. **Qué es LINQ** y cómo se usa para consultas y conteos.
+7. **Para qué sirve ViewBag** y cuándo usar redirect después de un POST.
+8. **Cómo se relacionan las tablas** con FK y cómo EF modela esa relación.
+
+---
+
+## 9. Verificación realizada en este entorno
+
+Al documentar la práctica se ejecutaron comprobaciones automáticas:
+
+| Prueba | Resultado |
+|--------|-----------|
+| BD `Practica2` en localhost | Existe |
+| Tablas `Clientes`, `Mascotas` | Correctas |
+| FK `FK_Mascotas_Clientes` | Presente |
+| Compilación `Practica2.Web.sln` (MSBuild Debug) | Sin errores |
+
+La base de datos estaba vacía (0 clientes, 0 mascotas), lo cual es normal antes de las pruebas manuales en el navegador.
+
+---
+
+## 10. Próximos pasos de aprendizaje (opcional)
+
+- Añadir **Data Annotations** (`[Required]`, `[EmailAddress]`) en ViewModels para validación servidor automática con `ModelState.IsValid`.
+- Implementar **baja lógica** de clientes (`Estado = false`) desde una pantalla de administración.
+- Conectar `UtilitarioService` a una tabla real de errores en SQL Server.
+- Escribir **pruebas unitarias** para las reglas de conteo de mascotas por especie.
+
+---
+
+*Guía elaborada para apoyar el estudio de ASP.NET MVC 5, Entity Framework 6 y SQL Server en el contexto de la Práctica 2.*
