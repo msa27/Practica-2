@@ -1,26 +1,20 @@
-# Practica 2
+﻿# Practica 2
 
-Proyecto de práctica — gestión de Clientes y Mascotas (BD `Practica2`).
+Materials for **Practica 2** (Clientes / Mascotas): enunciado, database script, and Cursor rules for the assignment.
 
-## Contenido del repositorio
+## What is in this repository
 
-| Archivo / carpeta | Descripción |
-|-------------------|-------------|
-| `Database script.txt` | Esquema SQL de Practica2 |
-| `Enunciado Práctica 2.pdf` | Requisitos del profesor |
-| `.cursor/rules/` | Reglas de desarrollo (`practica2-*`, `workspace-overview`) |
-| `RepoKN/BD Semana.sql` | Script plantilla KN_BD |
-| `RepoKN/.cursor/rules/` | Patrones de referencia de la plantilla KN |
+| Path | Purpose |
+|------|---------|
+| `Database script.txt` | SQL schema for `Practica2` |
+| `Enunciado Práctica 2.pdf` | Assignment requirements |
+| `.cursor/rules/` | Workspace rules (`practica2-*`, `workspace-overview`) |
+| `RepoKN/BD Semana.sql` | Reference SQL from professor template |
+| `RepoKN/.cursor/rules/` | Reference Cursor rules from KN template |
+| `RepoKN/KN_WEB.slnx` | Solution file for the local template (optional) |
 
-## Referencia local (no en Git)
+## Local reference only (not in Git)
 
-`RepoKN/KN_WEB/` es la plantilla ASP.NET MVC del profesor. Se mantiene **solo en tu máquina** como referencia de estilo; no se sube a GitHub.
+**`RepoKN/KN_WEB/`** is the professor’s ASP.NET MVC template. Keep it on your machine for patterns and copy-paste, but it is **not** tracked in Git (see `.gitignore`). Do not commit or push that folder.
 
-## Control de versiones
-
-- **`main`** — trabajo actual de la práctica
-- **`original`** / tag **`baseline`** — estado inicial para comparar cambios
-
-```powershell
-git diff refs/heads/original..main
-```
+If you clone this repo, obtain `KN_WEB` separately from your course materials or your existing local copy.
