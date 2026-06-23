@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     Smoke tests for Practica 2 (enunciado flow).
@@ -30,7 +30,8 @@ param(
     [string]$SqlServer = "localhost",
     [string]$Database = "Practica2",
     [string]$BaseUrl = "",
-    [switch]$SkipHttp
+    [switch]$SkipHttp,
+    [int]$HttpTimeoutSec = 45
 )
 
 Set-StrictMode -Version Latest
@@ -267,7 +268,17 @@ function Invoke-WebFormPost {
         "{0}={1}" -f [uri]::EscapeDataString($_.Key), [uri]::EscapeDataString([string]$_.Value)
     }) -join "&"
     return Invoke-WebRequest -Uri $Url -Method Post -Body $body -ContentType "application/x-www-form-urlencoded" `
-        -WebSession $Session -MaximumRedirection 0 -ErrorAction SilentlyContinue -UseBasicParsing
+        -WebSession $Session -MaximumRedirection 0 -ErrorAction SilentlyContinue -UseBasicParsing -TimeoutSec $HttpTimeoutSec
+}
+
+function Warmup-HttpApp {
+    param(
+        [string]$Base,
+        [Microsoft.PowerShell.Commands.WebRequestSession]$Session,
+        [int]$TimeoutSec
+    )
+    $null = Invoke-WebRequest -Uri "$Base/Clientes/Registrar" -WebSession $Session -UseBasicParsing -TimeoutSec $TimeoutSec
+    $null = Invoke-WebRequest -Uri "$Base/Mascotas/Registrar" -WebSession $Session -UseBasicParsing -TimeoutSec $TimeoutSec
 }
 
 function Test-HttpEndpoints {
@@ -281,14 +292,15 @@ function Test-HttpEndpoints {
     Enable-TlsSkipCertValidation
 
     try {
-        $homeResp = Invoke-WebRequest -Uri "$base/" -WebSession $session -UseBasicParsing -TimeoutSec 10
+        Warmup-HttpApp -Base $base -Session $session -TimeoutSec $HttpTimeoutSec
+        $homeResp = Invoke-WebRequest -Uri "$base/" -WebSession $session -UseBasicParsing -TimeoutSec $HttpTimeoutSec
         if ($homeResp.StatusCode -eq 200 -and $homeResp.Content -match "Bienvenido") {
             Write-TestResult "Home page loads (layout/welcome)" "PASS"
         } else {
             Write-TestResult "Home page loads (layout/welcome)" "FAIL" "Status $($homeResp.StatusCode)"
         }
 
-        $clientGet = Invoke-WebRequest -Uri "$base/Clientes/Registrar" -WebSession $session -UseBasicParsing -TimeoutSec 10
+        $clientGet = Invoke-WebRequest -Uri "$base/Clientes/Registrar" -WebSession $session -UseBasicParsing -TimeoutSec $HttpTimeoutSec
         if ($clientGet.StatusCode -eq 200 -and $clientGet.Content -match "Registro de Clientes") {
             Write-TestResult "GET /Clientes/Registrar" "PASS"
         } else {
@@ -319,7 +331,7 @@ function Test-HttpEndpoints {
 
         $idCliente = Get-ClienteIdByCedula -Cedula $httpCedula
 
-        $mascGet = Invoke-WebRequest -Uri "$base/Mascotas/Registrar" -WebSession $session -UseBasicParsing -TimeoutSec 10
+        $mascGet = Invoke-WebRequest -Uri "$base/Mascotas/Registrar" -WebSession $session -UseBasicParsing -TimeoutSec $HttpTimeoutSec
         if ($mascGet.StatusCode -eq 200 -and $mascGet.Content -match "Registro de Mascotas") {
             Write-TestResult "GET /Mascotas/Registrar" "PASS"
         } else {
@@ -354,7 +366,7 @@ function Test-HttpEndpoints {
             Write-TestResult "POST 3rd same species shows error" "FAIL" "Status $($petFail.StatusCode)"
         }
 
-        $consulta = Invoke-WebRequest -Uri "$base/Mascotas/Consultar" -WebSession $session -UseBasicParsing -TimeoutSec 10
+        $consulta = Invoke-WebRequest -Uri "$base/Mascotas/Consultar" -WebSession $session -UseBasicParsing -TimeoutSec $HttpTimeoutSec
         if ($consulta.StatusCode -eq 200 -and $consulta.Content -match $httpCedula -and $consulta.Content -match "HttpPet1") {
             Write-TestResult "GET /Mascotas/Consultar shows data" "PASS"
         } else {
@@ -379,7 +391,7 @@ function Test-WebAppReachable {
     try {
         Enable-TlsSkipCertValidation
         $uri = ($Url.TrimEnd("/")) + "/"
-        $r = Invoke-WebRequest -Uri $uri -UseBasicParsing -TimeoutSec 5
+        $r = Invoke-WebRequest -Uri $uri -UseBasicParsing -TimeoutSec 15
         return ($r.StatusCode -eq 200)
     }
     catch {
