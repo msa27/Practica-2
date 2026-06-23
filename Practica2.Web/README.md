@@ -6,7 +6,7 @@ Proyecto ASP.NET MVC 5 para la práctica Clientes / Mascotas.
 
 - Visual Studio 2022 (carga de trabajo ASP.NET)
 - SQL Server con la base de datos `Practica2` (script en `Database script.txt`)
-- .NET Framework 4.8
+- .NET Framework 4.8.1
 
 ## Ejecutar
 
