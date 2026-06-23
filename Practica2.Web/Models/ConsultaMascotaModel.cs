@@ -1,4 +1,4 @@
-namespace Practica2.Web.Models
+﻿namespace Practica2.Web.Models
 {
     public class ConsultaMascotaModel
     {

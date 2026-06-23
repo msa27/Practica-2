@@ -1,4 +1,4 @@
-$(document).ready(function () {
+﻿$(document).ready(function () {
   $('#RegistrarClienteForm').validate({
     rules: {
       Cedula: { required: true },

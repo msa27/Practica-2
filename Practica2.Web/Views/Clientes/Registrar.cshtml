@@ -1,4 +1,4 @@
-@model Practica2.Web.Models.ClienteModel
+﻿@model Practica2.Web.Models.ClienteModel
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -17,7 +17,7 @@
             <h4 class="card-title">Datos del cliente</h4>
         </div>
         <div class="card-body">
-            @using (Html.BeginForm("Registrar", "Clientes", FormMethod.Post, new { @id = "RegistrarClienteForm" }))
+            @using (Html.BeginForm("Registrar", "Clientes", FormMethod.Post, new { @id = "RegistrarClienteForm", accept_charset = "utf-8" }))
             {
                 if (ViewBag.Mensaje != null)
                 {

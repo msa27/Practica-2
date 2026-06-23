@@ -1,4 +1,4 @@
-@model Practica2.Web.Models.MascotaModel
+﻿@model Practica2.Web.Models.MascotaModel
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -17,7 +17,7 @@
             <h4 class="card-title">Datos de la mascota</h4>
         </div>
         <div class="card-body">
-            @using (Html.BeginForm("Registrar", "Mascotas", FormMethod.Post, new { @id = "RegistrarMascotaForm" }))
+            @using (Html.BeginForm("Registrar", "Mascotas", FormMethod.Post, new { @id = "RegistrarMascotaForm", accept_charset = "utf-8" }))
             {
                 if (ViewBag.Mensaje != null)
                 {

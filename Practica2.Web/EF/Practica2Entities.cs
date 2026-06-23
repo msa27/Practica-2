@@ -1,4 +1,4 @@
-namespace Practica2.Web.EF
+﻿namespace Practica2.Web.EF
 {
     using System.Data.Entity;
 
