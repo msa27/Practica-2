@@ -11,6 +11,7 @@ Aplicación **ASP.NET MVC 5** para gestión de Clientes y Mascotas (BD `Practica
 | `Database script.txt` | Esquema SQL de la BD `Practica2` |
 | `Practica2_StoredProcedures.sql` | SPs (`spRegistrarCliente`, etc.) y tabla `tbError` |
 | `Enunciado Práctica 2.pdf` | Requisitos funcionales |
+| `DOCUMENTACION_EJERCICIO.md` | Documentación corta del ejercicio por archivo |
 | `PLAN.md` | Plan completo, checklists y resultados de verificación |
 | `Tests/` | Smoke tests automatizados (SQL + HTTP opcional) — ver `Tests/README.md` |
 | `APRENDIZAJE.md` | Guía didáctica del código y conceptos MVC |
