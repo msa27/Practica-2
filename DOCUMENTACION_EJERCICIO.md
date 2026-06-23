@@ -14,9 +14,21 @@ La consulta lista mascotas con cédula y nombre del cliente, nombre de la mascot
 
 ---
 
-## 2. Scripts SQL
+## 2. Scripts SQL (orden de ejecución)
 
-### `Database script.txt`
+La base de datos se prepara con **dos scripts separados**. El script del profesor define únicamente las tablas del enunciado; los procedimientos almacenados y la bitácora son **adiciones** que no alteran ese esquema.
+
+| Script | Rol | ¿Modifica `Clientes`/`Mascotas`? |
+|--------|-----|----------------------------------|
+| **1.** `Database script.txt` | Tablas del profesor (`Practica2`, `Clientes`, `Mascotas`, FK). **Intocable** — no añadir columnas, renombrar ni cambiar DDL. | Crea las tablas (script original) |
+| **2.** `Practica2_StoredProcedures.sql` | SPs de negocio + tabla auxiliar `tbError` (opcional, patrón KN). Solo `CREATE PROCEDURE` y objetos nuevos. | **No** — no hace `ALTER`/`DROP` de tablas del profesor |
+
+```text
+sqlcmd -S localhost -E -i "Database script.txt"
+sqlcmd -S localhost -E -i "Practica2_StoredProcedures.sql"
+```
+
+### Script 1 — `Database script.txt` (profesor, intocable)
 
 | Elemento | Descripción |
 |----------|-------------|
@@ -25,7 +37,7 @@ La consulta lista mascotas con cédula y nombre del cliente, nombre de la mascot
 | `Mascotas` | `IdMascota` (PK, identity), `Nombre`, `Especie`, `Raza`, `Peso` (decimal 8,2), `IdCliente` (FK) |
 | `FK_Mascotas_Clientes` | Relación 1:N Clientes → Mascotas |
 
-### `Practica2_StoredProcedures.sql`
+### Script 2 — `Practica2_StoredProcedures.sql` (adiciones, no modifica tablas del profesor)
 
 | Objeto | Propósito |
 |--------|-----------|
