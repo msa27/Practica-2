@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Dominio Practica 2
 
-Script: `Database script.txt` (raíz del workspace). BD: `Practica2`.
+Script: `Database script.sql` (raíz del workspace). BD: `Practica2`.
 
 ## Relación
 

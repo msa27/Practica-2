@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Convenciones SQL (Practica 2)
 
-## Practica 2 (`Database script.txt` → `Practica2`)
+## Practica 2 (`Database script.sql` → `Practica2`)
 
 - Tablas plural sin `tb`: `Clientes`, `Mascotas`
 - PK: `Id{Entidad} BIGINT IDENTITY`, `PK_{Entidad}`

@@ -20,15 +20,15 @@ La base de datos se prepara con **dos scripts separados**. El script del profeso
 
 | Script | Rol | ¿Modifica `Clientes`/`Mascotas`? |
 |--------|-----|----------------------------------|
-| **1.** `Database script.txt` | Tablas del profesor (`Practica2`, `Clientes`, `Mascotas`, FK). **Intocable** — no añadir columnas, renombrar ni cambiar DDL. | Crea las tablas (script original) |
+| **1.** `Database script.sql` | Tablas del profesor (`Practica2`, `Clientes`, `Mascotas`, FK). **Intocable** — no añadir columnas, renombrar ni cambiar DDL. | Crea las tablas (script original) |
 | **2.** `Practica2_StoredProcedures.sql` | SPs de negocio + tabla auxiliar `tbError` (opcional, patrón KN). Solo `CREATE PROCEDURE` y objetos nuevos. | **No** — no hace `ALTER`/`DROP` de tablas del profesor |
 
 ```text
-sqlcmd -S localhost -E -i "Database script.txt"
+sqlcmd -S localhost -E -i "Database script.sql"
 sqlcmd -S localhost -E -i "Practica2_StoredProcedures.sql"
 ```
 
-### Script 1 — `Database script.txt` (profesor, intocable)
+### Script 1 — `Database script.sql` (profesor, intocable)
 
 | Elemento | Descripción |
 |----------|-------------|
@@ -137,4 +137,4 @@ Todos los controladores capturan excepciones, registran en bitácora (`Utilitari
 
 ## 5. Entrega
 
-Incluir: `Practica2.Web.sln`, carpeta `Practica2.Web/`, `Database script.txt`, `Practica2_StoredProcedures.sql`. Excluir `bin/`, `obj/`, `.vs/`.
+Incluir: `Practica2.Web.sln`, carpeta `Practica2.Web/`, `Database script.sql`, `Practica2_StoredProcedures.sql`. Excluir `bin/`, `obj/`, `.vs/`.

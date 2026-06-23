@@ -1,4 +1,4 @@
-﻿# Practica 2
+# Practica 2
 
 Aplicación **ASP.NET MVC 5** para gestión de Clientes y Mascotas (BD `Practica2`).
 
@@ -8,7 +8,7 @@ Aplicación **ASP.NET MVC 5** para gestión de Clientes y Mascotas (BD `Practica
 |------|-----------|
 | `Practica2.Web.sln` | Solución Visual Studio |
 | `Practica2.Web/` | Proyecto MVC implementado |
-| `Database script.txt` | Esquema SQL de la BD `Practica2` |
+| `Database script.sql` | Esquema SQL de la BD `Practica2` |
 | `Practica2_StoredProcedures.sql` | SPs (`spRegistrarCliente`, etc.) y tabla `tbError` |
 | `Enunciado Práctica 2.pdf` | Requisitos funcionales |
 | `DOCUMENTACION_EJERCICIO.md` | Documentación corta del ejercicio por archivo |
@@ -19,7 +19,7 @@ Aplicación **ASP.NET MVC 5** para gestión de Clientes y Mascotas (BD `Practica
 
 ## Cómo ejecutar
 
-1. Ejecutar `Database script.txt` en SQL Server (BD `Practica2`).
+1. Ejecutar `Database script.sql` en SQL Server (BD `Practica2`).
 2. Ejecutar `Practica2_StoredProcedures.sql` (SPs y tabla `tbError`).
 3. Abrir `Practica2.Web.sln` en Visual Studio 2022.
 4. Restaurar paquetes NuGet (clic derecho en la solución).
@@ -38,7 +38,7 @@ Aplicación **ASP.NET MVC 5** para gestión de Clientes y Mascotas (BD `Practica
 
 ## Entrega
 
-Empaquetar `Practica2.Web.sln`, carpeta `Practica2.Web/`, `Database script.txt` y `Practica2_StoredProcedures.sql`. Excluir `bin/`, `obj/`, `.vs/` y `RepoKN/`.
+Empaquetar `Practica2.Web.sln`, carpeta `Practica2.Web/`, `Database script.sql` y `Practica2_StoredProcedures.sql`. Excluir `bin/`, `obj/`, `.vs/` y `RepoKN/`.
 
 **Fecha límite:** Semana 7, 6:00 pm (campus virtual).
 

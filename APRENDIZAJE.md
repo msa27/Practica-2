@@ -204,7 +204,7 @@ La conexión usa formato **EntityClient** con metadatos embebidos en el ensambla
 
 El contexto lanza `UnintentionalCodeFirstException` en `OnModelCreating` porque el mapeo vive en el EDMX, no en código Fluent API.
 
-La relación **1 cliente → N mascotas** se modela en el EDMX y corresponde a `FK_Mascotas_Clientes` del script `Database script.txt`.
+La relación **1 cliente → N mascotas** se modela en el EDMX y corresponde a `FK_Mascotas_Clientes` del script `Database script.sql`.
 
 Los scripts SQL auxiliares están en `Practica2_StoredProcedures.sql` (tabla `tbError` + procedimientos almacenados).
 
@@ -261,7 +261,7 @@ La comparación de `Especie` en el SP es **exacta** (mayúsculas/minúsculas imp
 | Mascota (navegador) | jQuery: `required`, `number`, `min: 0.01` en peso | Sí — `Scripts/registrar-mascota.js` |
 | Servidor (reglas de negocio) | Cédula única, cliente activo, límite por especie | Sí — SPs `spRegistrarCliente` / `spRegistrarMascota` |
 | Servidor (campos vacíos) | `[Required]` / `ModelState` | **No** — ver sección 10 |
-| BD | Columnas `NOT NULL` en script SQL | Sí — `Database script.txt` |
+| BD | Columnas `NOT NULL` en script SQL | Sí — `Database script.sql` |
 
 ### 4.5 Consulta de mascotas
 
@@ -374,7 +374,7 @@ El bloque `using` garantiza que el contexto EF se **dispose** al salir, liberand
 
 ## 7. Base de datos (recordatorio)
 
-Script en `Database script.txt`:
+Script en `Database script.sql`:
 
 | Tabla | Columnas principales |
 |-------|---------------------|
@@ -407,7 +407,7 @@ Comprobaciones ejecutadas al auditar el repositorio (junio 2026):
 | Prueba | Resultado | Cómo comprobarlo |
 |--------|-----------|------------------|
 | BD `Practica2` en localhost | Existe | `sqlcmd -S localhost -E -Q "SELECT name FROM sys.databases WHERE name = 'Practica2'"` |
-| Tablas `Clientes`, `Mascotas`, `tbError` | Presentes | Scripts `Database script.txt` + `Practica2_StoredProcedures.sql` |
+| Tablas `Clientes`, `Mascotas`, `tbError` | Presentes | Scripts `Database script.sql` + `Practica2_StoredProcedures.sql` |
 | SPs (`spRegistrarCliente`, etc.) | Presentes | `Practica2_StoredProcedures.sql` |
 | FK `FK_Mascotas_Clientes` | Presente | Definida en el script SQL |
 | Compilación `Practica2.Web.sln` (MSBuild Debug) | Sin errores | MSBuild genera `Practica2.Web.dll` |

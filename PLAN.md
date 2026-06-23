@@ -71,7 +71,7 @@ La interfaz debe incluir una página de bienvenida y un menú lateral con las tr
 
 | Paso | Descripción | Verificación |
 |------|-------------|--------------|
-| 0.1 | Ejecutar `Database script.txt` y `Practica2_StoredProcedures.sql` | BD `Practica2` + SPs + `tbError` |
+| 0.1 | Ejecutar `Database script.sql` y `Practica2_StoredProcedures.sql` | BD `Practica2` + SPs + `tbError` |
 | 0.2 | Crear solución `Practica2.Web.sln` y proyecto MVC 5 | Proyecto compila |
 | 0.3 | Configurar cadena de conexión en `Web.config` | `Practica2Entities` apunta a `localhost` |
 | 0.4 | Restaurar paquetes NuGet (EF6, MVC, jQuery, etc.) | Carpeta `packages/` presente |
@@ -190,7 +190,7 @@ La interfaz debe incluir una página de bienvenida y un menú lateral con las tr
 
 - [ ] Incluir `Practica2.Web.sln`
 - [ ] Incluir carpeta `Practica2.Web/` completa (código fuente)
-- [ ] Incluir `Database script.txt` y `Practica2_StoredProcedures.sql`
+- [ ] Incluir `Database script.sql` y `Practica2_StoredProcedures.sql`
 - [ ] **Excluir:** `bin/`, `obj/`, `.vs/`, `packages/` (opcional según indicaciones del profesor), `RepoKN/`
 - [ ] Verificar que la cadena de conexión use `localhost` e Integrated Security
 - [ ] Probar compilación en Visual Studio 2022 antes de subir
@@ -238,7 +238,7 @@ sqlcmd -S localhost -E -d Practica2 -Q "SELECT IdCliente, Especie, COUNT(*) FROM
 ### Crear BD desde script
 
 ```powershell
-sqlcmd -S localhost -E -i "C:\workspace\Practica 2\Database script.txt"
+sqlcmd -S localhost -E -i "C:\workspace\Practica 2\Database script.sql"
 sqlcmd -S localhost -E -i "C:\workspace\Practica 2\Practica2_StoredProcedures.sql"
 ```
 

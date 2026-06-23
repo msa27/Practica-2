@@ -9,7 +9,7 @@ alwaysApply: true
 
 | Ubicación | Propósito |
 |-----------|-----------|
-| `Database script.txt` | Esquema BD `Practica2` (Clientes, Mascotas) |
+| `Database script.sql` | Esquema BD `Practica2` (Clientes, Mascotas) |
 | `Enunciado Práctica 2.pdf` | Requisitos funcionales de la práctica |
 | `Practica2.Web/` | Proyecto ASP.NET MVC 5 (desde cero) |
 | `Practica2.Web.sln` | Solución Visual Studio |
