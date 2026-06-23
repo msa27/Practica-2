@@ -13,6 +13,13 @@ alwaysApply: false
 - FK: `FK_Mascotas_Clientes` con `WITH CHECK ADD`
 - **No modificar** tablas del script adjunto
 
+## Bitácora de errores (tabla auxiliar)
+
+Si se requiere bitácora como en la plantilla del curso:
+
+- Tabla: `tbError` con PK `Consecutivo INT IDENTITY`
+- SP: `spRegistrarError` con parámetros `@PascalCase`, variables `@v{Nombre}`
+
 ## Formato común
 
 - `USE [BaseDatos]`, separadores `GO`, esquema `dbo.` explícito

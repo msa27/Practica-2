@@ -3,6 +3,7 @@ using Practica2.Web.Models;
 using Practica2.Web.Servicios;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity.Core.Objects;
 using System.Linq;
 using System.Web.Mvc;
 
@@ -35,38 +36,24 @@ namespace Practica2.Web.Controllers
             {
                 using (var context = new Practica2Entities())
                 {
-                    var cliente = (from C in context.Clientes
-                                   where C.IdCliente == model.IdCliente && C.Estado == true
-                                   select C).FirstOrDefault();
+                    var resultadoParam = new ObjectParameter("Resultado", typeof(int));
+                    context.spRegistrarMascota(
+                        model.Nombre,
+                        model.Especie,
+                        model.Raza,
+                        model.Peso,
+                        model.IdCliente,
+                        resultadoParam);
 
-                    if (cliente == null)
+                    var resultado = Convert.ToInt32(resultadoParam.Value);
+
+                    if (resultado != 1)
                     {
                         ViewBag.Mensaje = "La información no se ha podido registrar";
                         model.Clientes = ObtenerClientesActivos(context, model.IdCliente);
                         return View(model);
                     }
 
-                    var countEspecie = (from M in context.Mascotas
-                                        where M.IdCliente == model.IdCliente && M.Especie == model.Especie
-                                        select M).Count();
-
-                    if (countEspecie >= 2)
-                    {
-                        ViewBag.Mensaje = "La información no se ha podido registrar";
-                        model.Clientes = ObtenerClientesActivos(context, model.IdCliente);
-                        return View(model);
-                    }
-
-                    context.Mascotas.Add(new Mascotas
-                    {
-                        Nombre = model.Nombre,
-                        Especie = model.Especie,
-                        Raza = model.Raza,
-                        Peso = model.Peso,
-                        IdCliente = model.IdCliente
-                    });
-
-                    context.SaveChanges();
                     return RedirectToAction("Consultar");
                 }
             }
@@ -88,16 +75,14 @@ namespace Practica2.Web.Controllers
             {
                 using (var context = new Practica2Entities())
                 {
-                    var lista = (from M in context.Mascotas
-                                 join C in context.Clientes on M.IdCliente equals C.IdCliente
-                                 orderby C.Nombre, M.Nombre
+                    var lista = (from R in context.spConsultarMascotas()
                                  select new ConsultaMascotaModel
                                  {
-                                     CedulaCliente = C.Cedula,
-                                     NombreCliente = C.Nombre,
-                                     NombreMascota = M.Nombre,
-                                     Especie = M.Especie,
-                                     Peso = M.Peso
+                                     CedulaCliente = R.CedulaCliente,
+                                     NombreCliente = R.NombreCliente,
+                                     NombreMascota = R.NombreMascota,
+                                     Especie = R.Especie,
+                                     Peso = R.Peso
                                  }).ToList();
 
                     return View(lista);

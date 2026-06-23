@@ -39,4 +39,4 @@ Script: `Database script.txt` (raíz del workspace). BD: `Practica2`.
 2. Seguir patrones en `practica2-controllers.mdc`, `practica2-razor-views.mdc`, etc.
 3. Validar cédula/correo duplicados antes de insertar
 4. En Mascotas: cliente existente y activo (`Estado == true`)
-5. Bitácora de errores con `UtilitarioService` (`Trace.TraceError`)
+5. Bitácora de errores con `UtilitarioService` (`tbError` / `spRegistrarError`)

@@ -6,21 +6,19 @@ Verificación automatizada del flujo del **enunciado** sin usar el test runner d
 
 | Prueba | Requisito |
 |--------|-----------|
-| Registrar cliente (cédula única) | Inserción OK |
-| Cédula duplicada rechazada | Segundo insert falla |
+| Registrar cliente (cédula única) | Inserción OK (`Resultado = 1`) |
+| Cédula duplicada rechazada | Segundo insert falla (`Resultado = -1`) |
 | Registrar mascota | Mascota vinculada a cliente activo |
-| Máx. 2 misma especie | Tercera mascota rechazada |
-| Consulta devuelve datos | JOIN Clientes/Mascotas lista las mascotas |
+| Máx. 2 misma especie | Tercera mascota falla (`Resultado = -2`) |
+| Consulta devuelve datos | `spConsultarMascotas` lista las mascotas |
 
 Con la web en ejecución, también se prueban HTTP: layout, `POST` de clientes/mascotas y `GET /Mascotas/Consultar`.
 
 ## Requisitos
 
-- SQL Server con BD `Practica2` creada con **`Database script.txt`** (solo tablas `Clientes` y `Mascotas`)
+- SQL Server con BD `Practica2` y SPs de `Practica2_StoredProcedures.sql`
 - `sqlcmd` en el PATH
 - (Opcional) IIS Express en `https://localhost:44300/` para pruebas HTTP
-
-**No se requieren stored procedures.** Las pruebas SQL usan INSERT/SELECT directo con las mismas reglas que los controladores MVC.
 
 ## Ejecutar
 

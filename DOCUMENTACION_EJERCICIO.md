@@ -10,15 +10,25 @@ La práctica pide una aplicación web **ASP.NET MVC 5** para una clínica veteri
 
 El registro de clientes captura cédula, nombre y correo; la cédula no puede repetirse. El registro de mascotas asocia cada animal a un cliente activo y limita a **máximo 2 mascotas de la misma especie por cliente**. Todos los campos de los formularios son obligatorios.
 
-La consulta lista mascotas con cédula y nombre del cliente, nombre de la mascota, especie y peso. Las reglas de negocio se implementan en los **controladores** con LINQ y `SaveChanges()`; la validación de campos obligatorios, en el **cliente** con jQuery Validate.
-
-**Base de datos:** solo el script del profesor (`Database script.txt`) con tablas `Clientes` y `Mascotas`. No se modifica el esquema ni se añaden tablas/SPs extra.
+La consulta lista mascotas con cédula y nombre del cliente, nombre de la mascota, especie y peso. Las reglas de negocio se implementan en **stored procedures**; la validación de campos obligatorios, en el **cliente** con jQuery Validate.
 
 ---
 
-## 2. Script SQL
+## 2. Scripts SQL (orden de ejecución)
 
-### `Database script.txt` (único script requerido)
+La base de datos se prepara con **dos scripts separados**. El script del profesor define únicamente las tablas del enunciado; los procedimientos almacenados y la bitácora son **adiciones** que no alteran ese esquema.
+
+| Script | Rol | ¿Modifica `Clientes`/`Mascotas`? |
+|--------|-----|----------------------------------|
+| **1.** `Database script.txt` | Tablas del profesor (`Practica2`, `Clientes`, `Mascotas`, FK). **Intocable** — no añadir columnas, renombrar ni cambiar DDL. | Crea las tablas (script original) |
+| **2.** `Practica2_StoredProcedures.sql` | SPs de negocio + tabla auxiliar `tbError` (opcional, patrón KN). Solo `CREATE PROCEDURE` y objetos nuevos. | **No** — no hace `ALTER`/`DROP` de tablas del profesor |
+
+```text
+sqlcmd -S localhost -E -i "Database script.txt"
+sqlcmd -S localhost -E -i "Practica2_StoredProcedures.sql"
+```
+
+### Script 1 — `Database script.txt` (profesor, intocable)
 
 | Elemento | Descripción |
 |----------|-------------|
@@ -26,6 +36,16 @@ La consulta lista mascotas con cédula y nombre del cliente, nombre de la mascot
 | `Clientes` | `IdCliente` (PK, identity), `Cedula`, `Nombre`, `Correo`, `Estado` (bit) |
 | `Mascotas` | `IdMascota` (PK, identity), `Nombre`, `Especie`, `Raza`, `Peso` (decimal 8,2), `IdCliente` (FK) |
 | `FK_Mascotas_Clientes` | Relación 1:N Clientes → Mascotas |
+
+### Script 2 — `Practica2_StoredProcedures.sql` (adiciones, no modifica tablas del profesor)
+
+| Objeto | Propósito |
+|--------|-----------|
+| `tbError` | Bitácora: `Consecutivo`, `Fecha`, `Mensaje`, `Lugar`, `Usuario` |
+| `spRegistrarError` | Inserta un error en `tbError` |
+| `spRegistrarCliente` | Inserta cliente (`Estado=1`). `@Resultado`: `1` OK, `-1` cédula duplicada, `0` fallo |
+| `spRegistrarMascota` | Inserta mascota. `@Resultado`: `1` OK, `-1` cliente inexistente/inactivo, `-2` límite especie, `0` fallo |
+| `spConsultarMascotas` | JOIN Clientes/Mascotas; devuelve cédula, nombre cliente, nombre mascota, especie, peso |
 
 ---
 
@@ -37,13 +57,13 @@ La consulta lista mascotas con cédula y nombre del cliente, nombre de la mascot
 |-------------|--------|----------|
 | `HomeController` | `Index` (GET) | Página de bienvenida |
 | `ClientesController` | `Registrar` (GET) | Formulario vacío (`ClienteModel`) |
-| | `Registrar` (POST) | LINQ: verifica cédula única, inserta con `Estado=true`, `SaveChanges()`; si falla muestra mensaje; si OK redirige a Home |
+| | `Registrar` (POST) | Llama `spRegistrarCliente`; si `Resultado≠1` muestra mensaje; si OK redirige a Home |
 | `MascotasController` | `Registrar` (GET) | Formulario con dropdown de clientes activos |
-| | `Registrar` (POST) | LINQ: valida cliente activo y máx. 2 especie; inserta mascota; si falla recarga dropdown; si OK redirige a `Consultar` |
-| | `Consultar` (GET) | LINQ JOIN Clientes/Mascotas → lista `ConsultaMascotaModel` |
+| | `Registrar` (POST) | Llama `spRegistrarMascota`; si falla recarga dropdown; si OK redirige a `Consultar` |
+| | `Consultar` (GET) | Ejecuta `spConsultarMascotas` → lista `ConsultaMascotaModel` |
 | | `ObtenerClientesActivos` | LINQ: clientes con `Estado==true` para el dropdown |
 
-Todos los controladores capturan excepciones, registran con `UtilitarioService` (Trace) y devuelven `Error.cshtml`.
+Todos los controladores capturan excepciones, registran en bitácora (`UtilitarioService`) y devuelven `Error.cshtml`.
 
 ### Models (ViewModels)
 
@@ -57,9 +77,11 @@ Todos los controladores capturan excepciones, registran con `UtilitarioService` 
 
 | Archivo | Contenido |
 |---------|-----------|
-| `Model1.edmx` (+ `.csdl`, `.ssdl`, `.msl`) | Modelo EDMX contra BD `Practica2` — solo `Clientes` y `Mascotas` |
-| `Model1.Context.cs` | `Practica2Entities`: `DbSet<Clientes>`, `DbSet<Mascotas>` |
+| `Model1.edmx` (+ `.csdl`, `.ssdl`, `.msl`) | Modelo EDMX contra BD `Practica2` |
+| `Model1.Context.cs` | `Practica2Entities`: `DbSet` + métodos de los 4 SPs |
 | `Clientes.cs`, `Mascotas.cs` | Entidades de tablas |
+| `tbError.cs` | Entidad bitácora |
+| `spConsultarMascotas_Result.cs` | Tipo de retorno del SP de consulta |
 
 ### Views
 
@@ -83,7 +105,7 @@ Todos los controladores capturan excepciones, registran con `UtilitarioService` 
 
 | Archivo | Propósito |
 |---------|-----------|
-| `UtilitarioService.cs` | `RegistrarErrorBitacora` → `System.Diagnostics.Trace` (sin tabla en BD) |
+| `UtilitarioService.cs` | `RegistrarErrorBitacora` → `spRegistrarError` (no propaga fallo de bitácora) |
 
 ### Configuración
 
@@ -102,17 +124,17 @@ Todos los controladores capturan excepciones, registran con `UtilitarioService` 
 | Regla | Capa | Detalle |
 |-------|------|---------|
 | Campos obligatorios | Cliente (JS) | `registrar-cliente.js`, `registrar-mascota.js` |
-| Cédula única | Controlador | LINQ `FirstOrDefault` por cédula antes de insertar |
-| Cliente activo al registrar mascota | Controlador | LINQ verifica `Estado == true` |
-| Máx. 2 mascotas misma especie/cliente | Controlador | LINQ `Count()` por `IdCliente` + `Especie` |
+| Cédula única | SP | `spRegistrarCliente` → `Resultado = -1` |
+| Cliente activo al registrar mascota | SP | `spRegistrarMascota` verifica `Estado = 1` → `-1` |
+| Máx. 2 mascotas misma especie/cliente | SP | `spRegistrarMascota` → `-2` |
 | Solo clientes activos en dropdown | Controlador | `MascotasController.ObtenerClientesActivos` (LINQ) |
-| Mensaje si regla falla | Controlador | `ViewBag.Mensaje` genérico |
-| Errores de excepción | Servicio | `UtilitarioService` → `Trace.TraceError` |
-| Consulta de mascotas | Controlador | LINQ JOIN ordenado por nombre cliente/mascota |
-| Cliente nuevo con `Estado=1` | Controlador | Insert con `Estado = true` |
+| Mensaje si SP falla | Controlador | `ViewBag.Mensaje` genérico; no distingue código `-1`/`-2` |
+| Errores de excepción | Servicio + SP | `UtilitarioService` → `spRegistrarError` |
+| Consulta de mascotas | SP | `spConsultarMascotas` (JOIN ordenado por nombre cliente/mascota) |
+| Cliente nuevo con `Estado=1` | SP | `spRegistrarCliente` inserta con `Estado = 1` |
 
 ---
 
 ## 5. Entrega
 
-Incluir: `Practica2.Web.sln`, carpeta `Practica2.Web/`, `Database script.txt`. Excluir `bin/`, `obj/`, `.vs/`.
+Incluir: `Practica2.Web.sln`, carpeta `Practica2.Web/`, `Database script.txt`, `Practica2_StoredProcedures.sql`. Excluir `bin/`, `obj/`, `.vs/`.

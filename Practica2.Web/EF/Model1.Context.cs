@@ -6,8 +6,11 @@
 
 namespace Practica2.Web.EF
 {
+    using System;
     using System.Data.Entity;
     using System.Data.Entity.Infrastructure;
+    using System.Data.Entity.Core.Objects;
+    using System.Linq;
 
     public partial class Practica2Entities : DbContext
     {
@@ -23,5 +26,70 @@ namespace Practica2.Web.EF
 
         public virtual DbSet<Clientes> Clientes { get; set; }
         public virtual DbSet<Mascotas> Mascotas { get; set; }
+        public virtual DbSet<tbError> tbError { get; set; }
+
+        public virtual ObjectResult<spConsultarMascotas_Result> spConsultarMascotas()
+        {
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction<spConsultarMascotas_Result>("spConsultarMascotas");
+        }
+
+        public virtual int spRegistrarCliente(string cedula, string nombre, string correo, ObjectParameter resultado)
+        {
+            var cedulaParameter = cedula != null ?
+                new ObjectParameter("Cedula", cedula) :
+                new ObjectParameter("Cedula", typeof(string));
+
+            var nombreParameter = nombre != null ?
+                new ObjectParameter("Nombre", nombre) :
+                new ObjectParameter("Nombre", typeof(string));
+
+            var correoParameter = correo != null ?
+                new ObjectParameter("Correo", correo) :
+                new ObjectParameter("Correo", typeof(string));
+
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("spRegistrarCliente", cedulaParameter, nombreParameter, correoParameter, resultado);
+        }
+
+        public virtual int spRegistrarError(string mensaje, string lugar, Nullable<int> usuario)
+        {
+            var mensajeParameter = mensaje != null ?
+                new ObjectParameter("Mensaje", mensaje) :
+                new ObjectParameter("Mensaje", typeof(string));
+
+            var lugarParameter = lugar != null ?
+                new ObjectParameter("Lugar", lugar) :
+                new ObjectParameter("Lugar", typeof(string));
+
+            var usuarioParameter = usuario.HasValue ?
+                new ObjectParameter("Usuario", usuario) :
+                new ObjectParameter("Usuario", typeof(int));
+
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("spRegistrarError", mensajeParameter, lugarParameter, usuarioParameter);
+        }
+
+        public virtual int spRegistrarMascota(string nombre, string especie, string raza, Nullable<decimal> peso, Nullable<long> idCliente, ObjectParameter resultado)
+        {
+            var nombreParameter = nombre != null ?
+                new ObjectParameter("Nombre", nombre) :
+                new ObjectParameter("Nombre", typeof(string));
+
+            var especieParameter = especie != null ?
+                new ObjectParameter("Especie", especie) :
+                new ObjectParameter("Especie", typeof(string));
+
+            var razaParameter = raza != null ?
+                new ObjectParameter("Raza", raza) :
+                new ObjectParameter("Raza", typeof(string));
+
+            var pesoParameter = peso.HasValue ?
+                new ObjectParameter("Peso", peso) :
+                new ObjectParameter("Peso", typeof(decimal));
+
+            var idClienteParameter = idCliente.HasValue ?
+                new ObjectParameter("IdCliente", idCliente) :
+                new ObjectParameter("IdCliente", typeof(long));
+
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("spRegistrarMascota", nombreParameter, especieParameter, razaParameter, pesoParameter, idClienteParameter, resultado);
+        }
     }
 }
