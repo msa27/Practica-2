@@ -125,9 +125,23 @@
     <Compile Include="Controllers\ClientesController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\MascotasController.cs" />
-    <Compile Include="EF\Clientes.cs" />
-    <Compile Include="EF\Mascotas.cs" />
-    <Compile Include="EF\Practica2Entities.cs" />
+    <Compile Include="EF\Clientes.cs">
+      <DependentUpon>Model1.edmx</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Mascotas.cs">
+      <DependentUpon>Model1.edmx</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Model1.Context.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Model1.edmx</DependentUpon>
+    </Compile>
+    <Compile Include="EF\spConsultarMascotas_Result.cs">
+      <DependentUpon>Model1.edmx</DependentUpon>
+    </Compile>
+    <Compile Include="EF\tbError.cs">
+      <DependentUpon>Model1.edmx</DependentUpon>
+    </Compile>
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -162,6 +176,20 @@
     <Folder Include="App_Data\" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="EF\Model1.csdl">
+      <LogicalName>EF.Model1.csdl</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EF\Model1.ssdl">
+      <LogicalName>EF.Model1.ssdl</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EF\Model1.msl">
+      <LogicalName>EF.Model1.msl</LogicalName>
+    </EmbeddedResource>
+    <EntityDeploy Include="EF\Model1.edmx">
+      <Generator>EntityModelCodeGenerator</Generator>
+      <LastGenOutput>Model1.Designer.cs</LastGenOutput>
+      <MetadataArtifactProcessing>EmbedInOutputAssembly</MetadataArtifactProcessing>
+    </EntityDeploy>
     <None Include="packages.config" />
   </ItemGroup>
   <PropertyGroup>

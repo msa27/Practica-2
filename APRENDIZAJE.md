@@ -13,19 +13,19 @@ Esta guía explica **qué hace el proyecto**, **cómo está organizado** y **por
 | Página de inicio | `Controllers/HomeController.cs`, `Views/Home/Index.cshtml` | Implementado |
 | Registro de clientes (GET/POST) | `Controllers/ClientesController.cs`, `Views/Clientes/Registrar.cshtml` | Implementado |
 | Registro de mascotas (GET/POST) | `Controllers/MascotasController.cs`, `Views/Mascotas/Registrar.cshtml` | Implementado |
-| Consulta de mascotas (JOIN LINQ) | `MascotasController.Consultar`, `Views/Mascotas/Consultar.cshtml` | Implementado |
+| Consulta de mascotas (SP) | `MascotasController.Consultar`, `Views/Mascotas/Consultar.cshtml` | Implementado |
 | ViewModels | `Models/ClienteModel.cs`, `MascotaModel.cs`, `ConsultaMascotaModel.cs` | Implementado |
-| Entity Framework 6 | `EF/Clientes.cs`, `EF/Mascotas.cs`, `EF/Practica2Entities.cs` | Implementado |
+| Entity Framework 6 (Database First) | `EF/Model1.edmx`, `Model1.Context.cs`, entidades generadas | Implementado |
+| Stored procedures | `Practica2_StoredProcedures.sql` (spRegistrarCliente, spRegistrarMascota, spConsultarMascotas, spRegistrarError) | Implementado |
 | Validación jQuery | `Scripts/registrar-cliente.js`, `Scripts/registrar-mascota.js` | Implementado |
 | Layout + menú lateral | `Views/Shared/_Layout.cshtml`, `Content/site.css` | Implementado |
-| Manejo de errores | try/catch en controladores, `Views/Shared/Error.cshtml`, `Servicios/UtilitarioService.cs` | Implementado |
-| Reglas de negocio en servidor | Cédula única, cliente activo, máx. 2 mascotas/especie | Implementado en controladores |
+| Manejo de errores | try/catch en controladores, `Views/Shared/Error.cshtml`, `UtilitarioService` → `spRegistrarError` / `tbError` | Implementado |
+| Reglas de negocio en servidor | Cédula única, cliente activo, máx. 2 mascotas/especie | Implementado en SPs y controladores |
 
 **No implementado** (mencionado solo como ideas futuras en la sección 10):
 
 - Validación servidor de campos vacíos con `[Required]` / `ModelState.IsValid` (hoy depende de jQuery + columnas `NOT NULL` en SQL).
 - Pantalla para dar de baja clientes (`Estado = false`).
-- Bitácora de errores en tabla SQL (solo `Trace.WriteLine`).
 - Pruebas unitarias automatizadas.
 
 ---
@@ -185,44 +185,28 @@ El layout define el **menú lateral** con las tres opciones del enunciado y el m
                         </li>
 ```
 
-### 3.4 Entity Framework (capa EF)
+### 3.4 Entity Framework (Database First + EDMX)
 
-**Entity Framework 6** es el ORM: traduce objetos C# a tablas SQL y viceversa.
+**Entity Framework 6 Database First** genera el modelo desde la base de datos `Practica2` mediante un archivo **EDMX** (`EF/Model1.edmx`), siguiendo el patrón del curso.
 
-- **Contexto:** `Practica2Entities` — puerta de entrada a la BD.
-- **DbSet:** colecciones `Clientes` y `Mascotas`.
-- **Entidades:** clases en `EF/` que reflejan tablas.
+- **Contexto:** `Practica2Entities` en `EF/Model1.Context.cs` — puerta de entrada a la BD.
+- **DbSet:** `Clientes`, `Mascotas`, `tbError`.
+- **Entidades:** clases parciales en `EF/` generadas desde el EDMX.
+- **SPs importados:** `spRegistrarCliente`, `spRegistrarMascota`, `spConsultarMascotas`, `spRegistrarError`.
 
-La conexión se lee de `Web.config`:
+La conexión usa formato **EntityClient** con metadatos embebidos en el ensamblado:
 
-```58:60:Practica2.Web/Web.config
-  <connectionStrings>
-    <add name="Practica2Entities" connectionString="data source=localhost;initial catalog=Practica2;integrated security=True;..." providerName="System.Data.SqlClient" />
-  </connectionStrings>
+```xml
+<add name="Practica2Entities"
+     connectionString="metadata=res://*/EF.Model1.csdl|res://*/EF.Model1.ssdl|res://*/EF.Model1.msl;provider=System.Data.SqlClient;provider connection string=&quot;...&quot;"
+     providerName="System.Data.EntityClient" />
 ```
 
-El contexto usa ese nombre:
+El contexto lanza `UnintentionalCodeFirstException` en `OnModelCreating` porque el mapeo vive en el EDMX, no en código Fluent API.
 
-```7:13:Practica2.Web/EF/Practica2Entities.cs
-        public Practica2Entities()
-            : base("name=Practica2Entities")
-        {
-        }
+La relación **1 cliente → N mascotas** se modela en el EDMX y corresponde a `FK_Mascotas_Clientes` del script `Database script.txt`.
 
-        public virtual DbSet<Clientes> Clientes { get; set; }
-        public virtual DbSet<Mascotas> Mascotas { get; set; }
-```
-
-La relación **1 cliente → N mascotas** se configura con clave foránea:
-
-```67:70:Practica2.Web/EF/Practica2Entities.cs
-            modelBuilder.Entity<Mascotas>()
-                .HasRequired(m => m.Clientes)
-                .WithMany(c => c.Mascotas)
-                .HasForeignKey(m => m.IdCliente);
-```
-
-En SQL esto corresponde a `FK_Mascotas_Clientes` del script `Database script.txt`.
+Los scripts SQL auxiliares están en `Practica2_StoredProcedures.sql` (tabla `tbError` + procedimientos almacenados).
 
 ### 3.5 Scripts (validación en el navegador)
 
@@ -238,21 +222,16 @@ En el **servidor**, los controladores validan las **reglas de negocio** (cédula
 
 ### 3.6 Servicios
 
-`UtilitarioService` centraliza el registro de errores. En esta práctica escribe en `Trace` (visible en la ventana Output de Visual Studio al depurar):
+`UtilitarioService` centraliza el registro de errores llamando al SP `spRegistrarError`, que inserta en la tabla `tbError`:
 
-```8:16:Practica2.Web/Servicios/UtilitarioService.cs
-        public void RegistrarErrorBitacora(string mensaje, string lugar, int usuario)
-        {
-            Trace.WriteLine(string.Format(
-                "[{0:yyyy-MM-dd HH:mm:ss}] Lugar: {1} | Usuario: {2} | {3}",
-                DateTime.Now,
-                lugar,
-                usuario,
-                mensaje));
-        }
+```csharp
+using (var context = new Practica2Entities())
+{
+    context.spRegistrarError(mensaje, lugar, usuario);
+}
 ```
 
-En un proyecto real podría llamar a un stored procedure (`spRegistrarError`) o escribir en tabla `tbError`.
+Los controladores invocan `utilitario.RegistrarErrorBitacora(...)` en los bloques `catch`; nunca llaman al SP directamente.
 
 ---
 
@@ -260,21 +239,7 @@ En un proyecto real podría llamar a un stored procedure (`spRegistrarError`) o 
 
 ### 4.1 Cédula única (no repetida)
 
-Al registrar un cliente, se busca si ya existe la cédula con **LINQ**:
-
-```37:46:Practica2.Web/Controllers/ClientesController.cs
-                    var existeCliente = (from C in context.Clientes
-                                         where C.Cedula == model.Cedula
-                                         select C).FirstOrDefault();
-
-                    if (existeCliente != null)
-                    {
-                        ViewBag.Mensaje = "La información no se ha podido registrar";
-                        return View(model);
-                    }
-```
-
-Si existe, no se inserta y se muestra el mensaje genérico de error (requisito del enunciado).
+Al registrar un cliente, se invoca `spRegistrarCliente`. El SP devuelve `@Resultado = -1` si la cédula ya existe; el controlador muestra el mensaje genérico de error.
 
 ### 4.2 Cliente activo para registrar mascota
 

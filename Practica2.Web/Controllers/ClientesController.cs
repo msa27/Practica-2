@@ -2,7 +2,7 @@
 using Practica2.Web.Models;
 using Practica2.Web.Servicios;
 using System;
-using System.Linq;
+using System.Data.Entity.Core.Objects;
 using System.Web.Mvc;
 
 namespace Practica2.Web.Controllers
@@ -34,28 +34,12 @@ namespace Practica2.Web.Controllers
             {
                 using (var context = new Practica2Entities())
                 {
-                    // Validar que la cédula no esté en uso
-                    var existeCliente = (from C in context.Clientes
-                                         where C.Cedula == model.Cedula
-                                         select C).FirstOrDefault();
+                    var resultadoParam = new ObjectParameter("Resultado", typeof(int));
+                    context.spRegistrarCliente(model.Cedula, model.Nombre, model.Correo, resultadoParam);
 
-                    if (existeCliente != null)
-                    {
-                        ViewBag.Mensaje = "La información no se ha podido registrar";
-                        return View(model);
-                    }
+                    var resultado = Convert.ToInt32(resultadoParam.Value);
 
-                    context.Clientes.Add(new Clientes
-                    {
-                        Cedula = model.Cedula,
-                        Nombre = model.Nombre,
-                        Correo = model.Correo,
-                        Estado = true
-                    });
-
-                    var response = context.SaveChanges();
-
-                    if (response <= 0)
+                    if (resultado != 1)
                     {
                         ViewBag.Mensaje = "La información no se ha podido registrar";
                         return View(model);

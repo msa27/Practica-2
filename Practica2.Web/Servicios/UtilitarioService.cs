@@ -1,5 +1,5 @@
-﻿using System;
-using System.Diagnostics;
+﻿using Practica2.Web.EF;
+using System;
 
 namespace Practica2.Web.Servicios
 {
@@ -7,12 +7,17 @@ namespace Practica2.Web.Servicios
     {
         public void RegistrarErrorBitacora(string mensaje, string lugar, int usuario)
         {
-            Trace.WriteLine(string.Format(
-                "[{0:yyyy-MM-dd HH:mm:ss}] Lugar: {1} | Usuario: {2} | {3}",
-                DateTime.Now,
-                lugar,
-                usuario,
-                mensaje));
+            try
+            {
+                using (var context = new Practica2Entities())
+                {
+                    context.spRegistrarError(mensaje, lugar, usuario);
+                }
+            }
+            catch
+            {
+                // Si falla la bitácora en BD, no propagar la excepción original
+            }
         }
     }
 }
