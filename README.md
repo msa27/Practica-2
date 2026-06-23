@@ -12,6 +12,7 @@ Aplicación **ASP.NET MVC 5** para gestión de Clientes y Mascotas (BD `Practica
 | `Practica2_StoredProcedures.sql` | SPs (`spRegistrarCliente`, etc.) y tabla `tbError` |
 | `Enunciado Práctica 2.pdf` | Requisitos funcionales |
 | `PLAN.md` | Plan completo, checklists y resultados de verificación |
+| `Tests/` | Smoke tests automatizados (SQL + HTTP opcional) — ver `Tests/README.md` |
 | `APRENDIZAJE.md` | Guía didáctica del código y conceptos MVC |
 | `.cursor/rules/` | Reglas Cursor de desarrollo |
 
@@ -23,6 +24,8 @@ Aplicación **ASP.NET MVC 5** para gestión de Clientes y Mascotas (BD `Practica
 4. Restaurar paquetes NuGet (clic derecho en la solución).
 5. Revisar `Practica2.Web/Web.config` → cadena `Practica2Entities` (`data source=localhost`).
 6. **F5** → IIS Express (`https://localhost:44300/`).
+
+**Smoke tests:** desde la raíz, `powershell -ExecutionPolicy Bypass -File "Tests\Run-SmokeTests.ps1"`. Detalle en `Tests/README.md`.
 
 ## Funcionalidad implementada
 

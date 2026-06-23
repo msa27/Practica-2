@@ -1,50 +1,37 @@
 # Practica 2 — Smoke Tests
 
-Automated verification of the **enunciado** business flow without requiring the Visual Studio test runner.
+Verificación automatizada del flujo del **enunciado** sin usar el test runner de Visual Studio.
 
-## What is covered
+## Qué cubren
 
-| Test | Requirement |
-|------|-------------|
-| Register client (unique cédula) | Client insert succeeds (`Resultado = 1`) |
-| Duplicate cédula rejected | Second insert with same cédula fails (`Resultado = -1`) |
-| Register mascota | Pet linked to active client succeeds |
-| Max 2 same species | Third pet of same species fails (`Resultado = -2`) |
-| Consulta returns data | `spConsultarMascotas` lists registered pets |
+| Prueba | Requisito |
+|--------|-----------|
+| Registrar cliente (cédula única) | Inserción OK (`Resultado = 1`) |
+| Cédula duplicada rechazada | Segundo insert falla (`Resultado = -1`) |
+| Registrar mascota | Mascota vinculada a cliente activo |
+| Máx. 2 misma especie | Tercera mascota falla (`Resultado = -2`) |
+| Consulta devuelve datos | `spConsultarMascotas` lista las mascotas |
 
-When the web app is running, HTTP tests also verify:
+Con la web en ejecución, también se prueban HTTP: layout, `POST` de clientes/mascotas y `GET /Mascotas/Consultar`.
 
-- Home layout with welcome message and menu routes
-- `POST /Clientes/Registrar` success redirect and duplicate error message
-- `POST /Mascotas/Registrar` success redirect and species limit error
-- `GET /Mascotas/Consultar` renders test data in the table
+## Requisitos
 
-## Prerequisites
+- SQL Server con BD `Practica2` y SPs de `Practica2_StoredProcedures.sql`
+- `sqlcmd` en el PATH
+- (Opcional) IIS Express en `https://localhost:44300/` para pruebas HTTP
 
-- SQL Server with database `Practica2` and stored procedures from `Practica2_StoredProcedures.sql`
-- `sqlcmd` on PATH
-- (Optional) IIS Express / web app at `https://localhost:44300/` for HTTP tests
+## Ejecutar
 
-## Run
-
-From the repository root:
+Desde la raíz del repositorio:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File "Tests\Run-SmokeTests.ps1"
 ```
 
-With explicit web URL:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File "Tests\Run-SmokeTests.ps1" -BaseUrl "https://localhost:44300/"
-```
-
-SQL-only (skip HTTP):
+Solo SQL (sin HTTP):
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File "Tests\Run-SmokeTests.ps1" -SkipHttp
 ```
 
-Exit code `0` = all executed tests passed; `1` = at least one failure.
-
-Test data uses a unique `SMOKE-*` cédula prefix and is cleaned up automatically.
+URL personalizada: `-BaseUrl "https://localhost:44300/"`. Código de salida `0` = OK; `1` = fallo. Los datos de prueba usan cédula `SMOKE-*` y se limpian solos.
