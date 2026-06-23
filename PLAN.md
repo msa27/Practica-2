@@ -36,30 +36,31 @@ La interfaz debe incluir una página de bienvenida y un menú lateral con las tr
 ┌──────────────────────────▼──────────────────────────────────┐
 │           Capa de control (Controllers/)                    │
 │  HomeController, ClientesController, MascotasController     │
-│  Reglas de negocio + LINQ + manejo de errores               │
+│  Reglas de negocio en SPs + LINQ (dropdown) + manejo de errores │
 └──────────────────────────┬──────────────────────────────────┘
                            │ ViewModels (Models/)
 ┌──────────────────────────▼──────────────────────────────────┐
 │           Capa de acceso a datos (EF/)                      │
-│  Entity Framework 6 — Practica2Entities, DbSet<Clientes>,   │
-│  DbSet<Mascotas>                                            │
+│  Entity Framework 6 Database First — Model1.edmx,            │
+│  Practica2Entities, SPs importados, DbSet<Clientes/Mascotas> │
 └──────────────────────────┬──────────────────────────────────┘
                            │ ADO.NET / T-SQL
 ┌──────────────────────────▼──────────────────────────────────┐
 │              SQL Server — BD Practica2                      │
-│  Tablas: Clientes (1) ──< Mascotas (N)                     │
-│  FK: FK_Mascotas_Clientes                                   │
+│  Tablas: Clientes (1) ──< Mascotas (N), tbError            │
+│  SPs: spRegistrarCliente, spRegistrarMascota,                │
+│       spConsultarMascotas, spRegistrarError                 │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 | Componente | Tecnología | Ubicación |
 |------------|------------|-----------|
 | Framework web | ASP.NET MVC 5, .NET 4.8 | `Practica2.Web/` |
-| ORM | Entity Framework 6 (Code First manual / mapeo a BD existente) | `Practica2.Web/EF/` |
+| ORM | Entity Framework 6 (Database First / EDMX `Model1.edmx`) | `Practica2.Web/EF/` |
 | ViewModels | Clases POCO en español | `Practica2.Web/Models/` |
 | Validación cliente | jQuery Validation 1.19.5 | `Practica2.Web/Scripts/` |
 | Estilos | Bootstrap 5 + CSS Mazer | `Views/Shared/_Layout.cshtml`, `Content/site.css` |
-| Bitácora errores | `UtilitarioService` (Trace) | `Practica2.Web/Servicios/` |
+| Bitácora errores | `UtilitarioService` → `spRegistrarError` / `tbError` | `Practica2.Web/Servicios/` |
 | Conexión BD | `Practica2Entities` en `Web.config` | Integrated Security → `localhost` |
 
 ---
@@ -70,17 +71,17 @@ La interfaz debe incluir una página de bienvenida y un menú lateral con las tr
 
 | Paso | Descripción | Verificación |
 |------|-------------|--------------|
-| 0.1 | Ejecutar `Database script.txt` en SQL Server | BD `Practica2` existe |
+| 0.1 | Ejecutar `Database script.txt` y `Practica2_StoredProcedures.sql` | BD `Practica2` + SPs + `tbError` |
 | 0.2 | Crear solución `Practica2.Web.sln` y proyecto MVC 5 | Proyecto compila |
 | 0.3 | Configurar cadena de conexión en `Web.config` | `Practica2Entities` apunta a `localhost` |
 | 0.4 | Restaurar paquetes NuGet (EF6, MVC, jQuery, etc.) | Carpeta `packages/` presente |
 
-### Fase 1 — Modelo de datos y EF ✅
+### Fase 1 — Modelo de datos y EF (EDMX) ✅
 
 | Paso | Descripción | Archivos |
 |------|-------------|----------|
-| 1.1 | Crear entidades `Clientes` y `Mascotas` | `EF/Clientes.cs`, `EF/Mascotas.cs` |
-| 1.2 | Configurar contexto `Practica2Entities` con relación 1:N y FK | `EF/Practica2Entities.cs` |
+| 1.1 | Modelo Database First desde BD `Practica2` | `EF/Model1.edmx`, entidades generadas |
+| 1.2 | Importar SPs al EDMX | `spRegistrarCliente`, `spRegistrarMascota`, `spConsultarMascotas`, `spRegistrarError` |
 | 1.3 | Crear ViewModels separados de entidades EF | `Models/ClienteModel.cs`, `MascotaModel.cs`, `ConsultaMascotaModel.cs` |
 
 ### Fase 2 — Layout y navegación ✅
@@ -96,7 +97,7 @@ La interfaz debe incluir una página de bienvenida y un menú lateral con las tr
 | Paso | Descripción | Regla de negocio |
 |------|-------------|------------------|
 | 3.1 | Vista GET con formulario vacío | — |
-| 3.2 | Vista POST: insertar cliente con `Estado = true` | Cédula no repetida |
+| 3.2 | Vista POST: `spRegistrarCliente` (cédula única en SP) | `@Resultado = 1` éxito, `-1` cédula duplicada |
 | 3.3 | Validación jQuery (campos obligatorios, email) | `Scripts/registrar-cliente.js` |
 | 3.4 | Mensaje de error vía `ViewBag.Mensaje` si falla | Texto: *"La información no se ha podido registrar"* |
 | 3.5 | Redirección a Home tras éxito | `RedirectToAction("Index", "Home")` |
@@ -106,8 +107,8 @@ La interfaz debe incluir una página de bienvenida y un menú lateral con las tr
 | Paso | Descripción | Regla de negocio |
 |------|-------------|------------------|
 | 4.1 | Dropdown de clientes activos (`Estado == true`) | Solo clientes activos |
-| 4.2 | Validar cliente existente y activo antes de insertar | Rechazar si inactivo o inexistente |
-| 4.3 | Contar mascotas de misma especie por cliente | Máximo 2 por especie/cliente |
+| 4.2 | `spRegistrarMascota` valida cliente activo | Rechazar si inactivo o inexistente (`@Resultado = -2`) |
+| 4.3 | `spRegistrarMascota` cuenta especie por cliente | Máximo 2 por especie/cliente (`@Resultado = -3`) |
 | 4.4 | Validación jQuery (todos los campos, peso numérico ≥ 0.01) | `Scripts/registrar-mascota.js` |
 | 4.5 | Redirección a consulta tras éxito | `RedirectToAction("Consultar")` |
 
@@ -115,7 +116,7 @@ La interfaz debe incluir una página de bienvenida y un menú lateral con las tr
 
 | Paso | Descripción | Columnas mostradas |
 |------|-------------|-------------------|
-| 5.1 | JOIN `Mascotas` + `Clientes` con LINQ | Cédula, nombre cliente, nombre mascota, especie, peso |
+| 5.1 | `spConsultarMascotas()` (JOIN en SQL) | Cédula, nombre cliente, nombre mascota, especie, peso |
 | 5.2 | Tabla Bootstrap en vista Razor | `Views/Mascotas/Consultar.cshtml` |
 | 5.3 | Mensaje si no hay registros | *"No hay mascotas registradas."* |
 
@@ -124,7 +125,7 @@ La interfaz debe incluir una página de bienvenida y un menú lateral con las tr
 | Paso | Descripción | Archivos |
 |------|-------------|----------|
 | 6.1 | try/catch en todas las acciones de controlador | `Controllers/*.cs` |
-| 6.2 | Registrar error con `UtilitarioService` | `Servicios/UtilitarioService.cs` |
+| 6.2 | Registrar error con `UtilitarioService` → `spRegistrarError` | `Servicios/UtilitarioService.cs`, tabla `tbError` |
 | 6.3 | Vista de error genérica | `Views/Shared/Error.cshtml` |
 
 ### Fase 7 — Verificación y entrega (este plan)
@@ -145,7 +146,8 @@ La interfaz debe incluir una página de bienvenida y un menú lateral con las tr
 ### Base de datos
 
 - [ ] BD `Practica2` existe en SQL Server
-- [ ] Tablas `Clientes` y `Mascotas` con columnas correctas
+- [ ] Ejecutar `Practica2_StoredProcedures.sql` (SPs + `tbError`)
+- [ ] Tablas `Clientes`, `Mascotas` y `tbError` con columnas correctas
 - [ ] FK `FK_Mascotas_Clientes` activa
 
 ### Navegación y layout
@@ -180,7 +182,7 @@ La interfaz debe incluir una página de bienvenida y un menú lateral con las tr
 ### Errores
 
 - [ ] Desconectar BD temporalmente → vista `Error` (opcional, avanzado)
-- [ ] Errores registrados en salida de depuración (Trace)
+- [ ] Errores registrados en tabla `tbError` (vía `spRegistrarError`)
 
 ---
 
@@ -188,7 +190,7 @@ La interfaz debe incluir una página de bienvenida y un menú lateral con las tr
 
 - [ ] Incluir `Practica2.Web.sln`
 - [ ] Incluir carpeta `Practica2.Web/` completa (código fuente)
-- [ ] Incluir `Database script.txt`
+- [ ] Incluir `Database script.txt` y `Practica2_StoredProcedures.sql`
 - [ ] **Excluir:** `bin/`, `obj/`, `.vs/`, `packages/` (opcional según indicaciones del profesor), `RepoKN/`
 - [ ] Verificar que la cadena de conexión use `localhost` e Integrated Security
 - [ ] Probar compilación en Visual Studio 2022 antes de subir
@@ -237,6 +239,7 @@ sqlcmd -S localhost -E -d Practica2 -Q "SELECT IdCliente, Especie, COUNT(*) FROM
 
 ```powershell
 sqlcmd -S localhost -E -i "C:\workspace\Practica 2\Database script.txt"
+sqlcmd -S localhost -E -i "C:\workspace\Practica 2\Practica2_StoredProcedures.sql"
 ```
 
 ### NuGet y compilación
@@ -277,7 +280,8 @@ git push origin main
 |--------------|-----------|---------|
 | Código fuente fases 0–6 | ✅ OK | Controladores, vistas, EF, scripts y layout presentes |
 | BD `Practica2` existe | ✅ OK | Confirmado con `sqlcmd` |
-| Tablas `Clientes`, `Mascotas` | ✅ OK | 2 tablas base |
+| Tablas `Clientes`, `Mascotas`, `tbError` | ✅ OK | Script base + `Practica2_StoredProcedures.sql` |
+| SPs importados en EDMX | ✅ OK | 4 procedimientos en `Model1.edmx` |
 | FK `FK_Mascotas_Clientes` | ✅ OK | Presente en script SQL |
 | Compilación MSBuild Debug | ✅ OK | `Practica2.Web.dll` generado sin errores |
 | Pruebas manuales navegador | ⏳ Pendiente | Requiere F5 en Visual Studio |

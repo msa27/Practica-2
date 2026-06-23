@@ -9,6 +9,7 @@ Aplicación **ASP.NET MVC 5** para gestión de Clientes y Mascotas (BD `Practica
 | `Practica2.Web.sln` | Solución Visual Studio |
 | `Practica2.Web/` | Proyecto MVC implementado |
 | `Database script.txt` | Esquema SQL de la BD `Practica2` |
+| `Practica2_StoredProcedures.sql` | SPs (`spRegistrarCliente`, etc.) y tabla `tbError` |
 | `Enunciado Práctica 2.pdf` | Requisitos funcionales |
 | `PLAN.md` | Plan completo, checklists y resultados de verificación |
 | `APRENDIZAJE.md` | Guía didáctica del código y conceptos MVC |
@@ -17,10 +18,11 @@ Aplicación **ASP.NET MVC 5** para gestión de Clientes y Mascotas (BD `Practica
 ## Cómo ejecutar
 
 1. Ejecutar `Database script.txt` en SQL Server (BD `Practica2`).
-2. Abrir `Practica2.Web.sln` en Visual Studio 2022.
-3. Restaurar paquetes NuGet (clic derecho en la solución).
-4. Revisar `Practica2.Web/Web.config` → cadena `Practica2Entities` (`data source=localhost`).
-5. **F5** → IIS Express (`https://localhost:44300/`).
+2. Ejecutar `Practica2_StoredProcedures.sql` (SPs y tabla `tbError`).
+3. Abrir `Practica2.Web.sln` en Visual Studio 2022.
+4. Restaurar paquetes NuGet (clic derecho en la solución).
+5. Revisar `Practica2.Web/Web.config` → cadena `Practica2Entities` (`data source=localhost`).
+6. **F5** → IIS Express (`https://localhost:44300/`).
 
 ## Funcionalidad implementada
 
@@ -32,7 +34,7 @@ Aplicación **ASP.NET MVC 5** para gestión de Clientes y Mascotas (BD `Practica
 
 ## Entrega
 
-Empaquetar `Practica2.Web.sln`, carpeta `Practica2.Web/` y `Database script.txt`. Excluir `bin/`, `obj/`, `.vs/` y `RepoKN/`.
+Empaquetar `Practica2.Web.sln`, carpeta `Practica2.Web/`, `Database script.txt` y `Practica2_StoredProcedures.sql`. Excluir `bin/`, `obj/`, `.vs/` y `RepoKN/`.
 
 **Fecha límite:** Semana 7, 6:00 pm (campus virtual).
 
