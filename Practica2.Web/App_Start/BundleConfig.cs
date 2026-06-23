@@ -16,7 +16,7 @@ namespace Practica2.Web
                         "~/Scripts/modernizr-*"));
 
             bundles.Add(new StyleBundle("~/Content/css").Include(
-                      "~/Content/site.css"));
+                      "~/Content/app.css"));
         }
     }
 }

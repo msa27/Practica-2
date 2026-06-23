@@ -152,8 +152,12 @@
     <Compile Include="Servicios\UtilitarioService.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Content\site.css" />
+    <Content Include="Content\app.css" />
+    <Content Include="Content\images\logo.png" />
+    <Content Include="Content\perfect-scrollbar.css" />
     <Content Include="Global.asax" />
+    <Content Include="Scripts\main.js" />
+    <Content Include="Scripts\perfect-scrollbar.min.js" />
     <Content Include="Scripts\registrar-cliente.js" />
     <Content Include="Scripts\registrar-mascota.js" />
     <Content Include="Web.config" />
