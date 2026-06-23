@@ -8,7 +8,7 @@ alwaysApply: false
 
 ## Bitácora centralizada
 
-Usar `UtilitarioService` — no llamar `spRegistrarError` directamente:
+Usar `UtilitarioService` — escribe en la traza de depuración con `Trace.TraceError`:
 
 ```csharp
 catch (Exception ex)

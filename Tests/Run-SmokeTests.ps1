@@ -4,8 +4,10 @@
     Smoke tests for Practica 2 (enunciado flow).
 
 .DESCRIPTION
-    Phase 1 - SQL: validates stored procedures (cedula unica, max 2 especies, consulta).
+    Phase 1 - SQL: validates tables Clientes/Mascotas and business rules via direct SQL.
     Phase 2 - HTTP: validates MVC endpoints when the web app is running (optional).
+
+    Uses ONLY the schema from Database script.txt (no stored procedures required).
 
 .PARAMETER SqlServer
     SQL Server instance. Default: localhost
@@ -88,25 +90,34 @@ function Invoke-SqlNonQuery {
     }
 }
 
-function Invoke-SpRegistrarCliente {
+function Test-ClienteCedulaExists {
+    param([string]$Cedula)
+    $safe = $Cedula.Replace("'", "''")
+    $q = "SET NOCOUNT ON; SELECT CASE WHEN EXISTS (SELECT 1 FROM dbo.Clientes WHERE Cedula = N'$safe') THEN 1 ELSE 0 END;"
+    return [int](Invoke-SqlScalar -Query $q) -eq 1
+}
+
+function Invoke-RegistrarCliente {
     param(
         [string]$Cedula,
         [string]$Nombre,
         [string]$Correo
     )
-    $q = @"
-DECLARE @r INT;
-EXEC dbo.spRegistrarCliente
-    @Cedula = N'$($Cedula.Replace("'", "''"))',
-    @Nombre = N'$($Nombre.Replace("'", "''"))',
-    @Correo = N'$($Correo.Replace("'", "''"))',
-    @Resultado = @r OUTPUT;
-SELECT @r;
+    if (Test-ClienteCedulaExists -Cedula $Cedula) {
+        return -1
+    }
+    $safeCedula = $Cedula.Replace("'", "''")
+    $safeNombre = $Nombre.Replace("'", "''")
+    $safeCorreo = $Correo.Replace("'", "''")
+    Invoke-SqlNonQuery -Query @"
+SET NOCOUNT ON;
+INSERT INTO dbo.Clientes (Cedula, Nombre, Correo, Estado)
+VALUES (N'$safeCedula', N'$safeNombre', N'$safeCorreo', 1);
 "@
-    return [int](Invoke-SqlScalar -Query $q)
+    return 1
 }
 
-function Invoke-SpRegistrarMascota {
+function Invoke-RegistrarMascota {
     param(
         [string]$Nombre,
         [string]$Especie,
@@ -114,17 +125,23 @@ function Invoke-SpRegistrarMascota {
         [decimal]$Peso,
         [long]$IdCliente
     )
-    $pesoText = $Peso.ToString([System.Globalization.CultureInfo]::InvariantCulture)
     $q = @"
-DECLARE @r INT;
-EXEC dbo.spRegistrarMascota
-    @Nombre = N'$($Nombre.Replace("'", "''"))',
-    @Especie = N'$($Especie.Replace("'", "''"))',
-    @Raza = N'$($Raza.Replace("'", "''"))',
-    @Peso = $pesoText,
-    @IdCliente = $IdCliente,
-    @Resultado = @r OUTPUT;
-SELECT @r;
+SET NOCOUNT ON;
+DECLARE @IdCliente BIGINT = $IdCliente;
+DECLARE @Especie NVARCHAR(100) = N'$($Especie.Replace("'", "''"))';
+DECLARE @Resultado INT = 0;
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Clientes WHERE IdCliente = @IdCliente AND Estado = 1)
+    SET @Resultado = -1;
+ELSE IF (SELECT COUNT(*) FROM dbo.Mascotas WHERE IdCliente = @IdCliente AND Especie = @Especie) >= 2
+    SET @Resultado = -2;
+ELSE
+BEGIN
+    INSERT INTO dbo.Mascotas (Nombre, Especie, Raza, Peso, IdCliente)
+    VALUES (N'$($Nombre.Replace("'", "''"))', @Especie, N'$($Raza.Replace("'", "''"))', $($Peso.ToString([System.Globalization.CultureInfo]::InvariantCulture)), @IdCliente);
+    SET @Resultado = 1;
+END
+SELECT @Resultado;
 "@
     return [int](Invoke-SqlScalar -Query $q)
 }
@@ -133,6 +150,19 @@ function Get-ClienteIdByCedula {
     param([string]$Cedula)
     $q = "SET NOCOUNT ON; SELECT CAST(IdCliente AS BIGINT) FROM dbo.Clientes WHERE Cedula = N'$($Cedula.Replace("'", "''"))';"
     return [long](Invoke-SqlScalar -Query $q)
+}
+
+function Get-ConsultaMascotaCount {
+    param([string]$Cedula)
+    $safe = $Cedula.Replace("'", "''")
+    $q = @"
+SET NOCOUNT ON;
+SELECT COUNT(*)
+FROM dbo.Mascotas M
+INNER JOIN dbo.Clientes C ON M.IdCliente = C.IdCliente
+WHERE C.Cedula = N'$safe';
+"@
+    return [int](Invoke-SqlScalar -Query $q)
 }
 
 function Remove-SmokeTestData {
@@ -156,13 +186,13 @@ function Test-SqlPrerequisites {
         }
         Write-TestResult "Database connection" "PASS" "$SqlServer / $Database"
 
-        foreach ($sp in @("spRegistrarCliente", "spRegistrarMascota", "spConsultarMascotas")) {
-            $exists = Invoke-SqlScalar -Query "SELECT CASE WHEN OBJECT_ID('dbo.$sp','P') IS NOT NULL THEN 1 ELSE 0 END;"
+        foreach ($table in @("Clientes", "Mascotas")) {
+            $exists = Invoke-SqlScalar -Query "SELECT CASE WHEN OBJECT_ID('dbo.$table','U') IS NOT NULL THEN 1 ELSE 0 END;"
             if ([int]$exists -ne 1) {
-                throw "Missing stored procedure dbo.$sp. Run Practica2_StoredProcedures.sql first."
+                throw "Missing table dbo.$table. Run Database script.txt first."
             }
         }
-        Write-TestResult "Stored procedures present" "PASS"
+        Write-TestResult "Tables Clientes and Mascotas present" "PASS"
     }
     catch {
         Write-TestResult "SQL prerequisites" "FAIL" $_.Exception.Message
@@ -176,8 +206,7 @@ function Test-SqlBusinessFlow {
     Remove-SmokeTestData -CedulaPrefix $TestRunId
 
     try {
-        # 1. Register client (unique cedula)
-        $r1 = Invoke-SpRegistrarCliente -Cedula $TestCedula -Nombre $TestNombre -Correo $TestCorreo
+        $r1 = Invoke-RegistrarCliente -Cedula $TestCedula -Nombre $TestNombre -Correo $TestCorreo
         if ($r1 -eq 1) {
             Write-TestResult "Register client (unique cedula)" "PASS" "Resultado=1"
         } else {
@@ -191,45 +220,35 @@ function Test-SqlBusinessFlow {
             Write-TestResult "Client persisted in DB" "FAIL" "IdCliente not found"
         }
 
-        # 2. Duplicate cedula fails
-        $rDup = Invoke-SpRegistrarCliente -Cedula $TestCedula -Nombre "Otro" -Correo "dup@test.local"
+        $rDup = Invoke-RegistrarCliente -Cedula $TestCedula -Nombre "Otro" -Correo "dup@test.local"
         if ($rDup -eq -1) {
             Write-TestResult "Duplicate cedula rejected" "PASS" "Resultado=-1"
         } else {
             Write-TestResult "Duplicate cedula rejected" "FAIL" "Expected -1, got $rDup"
         }
 
-        # 3. Register mascota
-        $rPet1 = Invoke-SpRegistrarMascota -Nombre "Firulais" -Especie "Perro" -Raza "Labrador" -Peso 12.5 -IdCliente $idCliente
+        $rPet1 = Invoke-RegistrarMascota -Nombre "Firulais" -Especie "Perro" -Raza "Labrador" -Peso 12.5 -IdCliente $idCliente
         if ($rPet1 -eq 1) {
             Write-TestResult "Register mascota (1st Perro)" "PASS"
         } else {
             Write-TestResult "Register mascota (1st Perro)" "FAIL" "Expected 1, got $rPet1"
         }
 
-        # 4. Second same species succeeds
-        $rPet2 = Invoke-SpRegistrarMascota -Nombre "Max" -Especie "Perro" -Raza "Beagle" -Peso 10.0 -IdCliente $idCliente
+        $rPet2 = Invoke-RegistrarMascota -Nombre "Max" -Especie "Perro" -Raza "Beagle" -Peso 10.0 -IdCliente $idCliente
         if ($rPet2 -eq 1) {
             Write-TestResult "Register mascota (2nd Perro)" "PASS"
         } else {
             Write-TestResult "Register mascota (2nd Perro)" "FAIL" "Expected 1, got $rPet2"
         }
 
-        # 5. Max 2 same species fails
-        $rPet3 = Invoke-SpRegistrarMascota -Nombre "Rocky" -Especie "Perro" -Raza "Bulldog" -Peso 15.0 -IdCliente $idCliente
+        $rPet3 = Invoke-RegistrarMascota -Nombre "Rocky" -Especie "Perro" -Raza "Bulldog" -Peso 15.0 -IdCliente $idCliente
         if ($rPet3 -eq -2) {
             Write-TestResult "Max 2 same species rejected" "PASS" "Resultado=-2"
         } else {
             Write-TestResult "Max 2 same species rejected" "FAIL" "Expected -2, got $rPet3"
         }
 
-        # 6. Consulta returns data
-        $consultaCount = [int](Invoke-SqlScalar -Query @"
-SET NOCOUNT ON;
-DECLARE @t TABLE (CedulaCliente VARCHAR(50), NombreCliente VARCHAR(100), NombreMascota VARCHAR(100), Especie VARCHAR(100), Peso DECIMAL(8,2));
-INSERT INTO @t EXEC dbo.spConsultarMascotas;
-SELECT COUNT(*) FROM @t WHERE CedulaCliente = N'$($TestCedula.Replace("'", "''"))';
-"@)
+        $consultaCount = Get-ConsultaMascotaCount -Cedula $TestCedula
         if ($consultaCount -ge 2) {
             Write-TestResult "Consulta returns registered mascotas" "PASS" "Rows for test client: $consultaCount"
         } else {

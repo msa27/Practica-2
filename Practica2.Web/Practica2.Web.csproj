@@ -136,12 +136,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Model1.edmx</DependentUpon>
     </Compile>
-    <Compile Include="EF\spConsultarMascotas_Result.cs">
-      <DependentUpon>Model1.edmx</DependentUpon>
-    </Compile>
-    <Compile Include="EF\tbError.cs">
-      <DependentUpon>Model1.edmx</DependentUpon>
-    </Compile>
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>

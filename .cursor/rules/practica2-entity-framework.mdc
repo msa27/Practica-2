@@ -24,6 +24,10 @@ using (var context = new Practica2Entities())
 }
 ```
 
+## EDMX
+
+El EDMX mapea **solo** las tablas `Clientes` y `Mascotas` del script `Database script.txt`. No hay stored procedures importados.
+
 ## Separación de capas
 
 - **Entidades EF** (`Clientes`, `Mascotas`) → carpeta `EF/`
@@ -35,6 +39,6 @@ using (var context = new Practica2Entities())
 - `Mascotas.IdCliente` → FK a `Clientes.IdCliente`
 - Dropdown clientes: LINQ sobre `context.Clientes` con `Estado == true`
 
-## SPs
+## Bitácora de errores
 
-Reutilizar `spRegistrarError` vía `UtilitarioService`. Nuevos SPs: prefijo `sp`, parámetros `@PascalCase`.
+`UtilitarioService` escribe en la traza con `Trace.TraceError`; no usa tabla ni SP de bitácora.

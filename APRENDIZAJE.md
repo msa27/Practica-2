@@ -13,14 +13,13 @@ Esta guía explica **qué hace el proyecto**, **cómo está organizado** y **por
 | Página de inicio | `Controllers/HomeController.cs`, `Views/Home/Index.cshtml` | Implementado |
 | Registro de clientes (GET/POST) | `Controllers/ClientesController.cs`, `Views/Clientes/Registrar.cshtml` | Implementado |
 | Registro de mascotas (GET/POST) | `Controllers/MascotasController.cs`, `Views/Mascotas/Registrar.cshtml` | Implementado |
-| Consulta de mascotas (SP) | `MascotasController.Consultar`, `Views/Mascotas/Consultar.cshtml` | Implementado |
+| Consulta de mascotas (LINQ) | `MascotasController.Consultar`, `Views/Mascotas/Consultar.cshtml` | Implementado |
 | ViewModels | `Models/ClienteModel.cs`, `MascotaModel.cs`, `ConsultaMascotaModel.cs` | Implementado |
-| Entity Framework 6 (Database First) | `EF/Model1.edmx`, `Model1.Context.cs`, entidades generadas | Implementado |
-| Stored procedures | `Practica2_StoredProcedures.sql` (spRegistrarCliente, spRegistrarMascota, spConsultarMascotas, spRegistrarError) | Implementado |
+| Entity Framework 6 (Database First) | `EF/Model1.edmx`, `Model1.Context.cs`, entidades `Clientes` y `Mascotas` | Implementado |
 | Validación jQuery | `Scripts/registrar-cliente.js`, `Scripts/registrar-mascota.js` | Implementado |
 | Layout + menú lateral | `Views/Shared/_Layout.cshtml`, `Content/site.css` | Implementado |
-| Manejo de errores | try/catch en controladores, `Views/Shared/Error.cshtml`, `UtilitarioService` → `spRegistrarError` / `tbError` | Implementado |
-| Reglas de negocio en servidor | Cédula única, cliente activo, máx. 2 mascotas/especie | Implementado en SPs y controladores |
+| Manejo de errores | try/catch en controladores, `Views/Shared/Error.cshtml`, `UtilitarioService` → `Trace.TraceError` | Implementado |
+| Reglas de negocio en servidor | Cédula única, cliente activo, máx. 2 mascotas/especie | Implementado en controladores (LINQ + `SaveChanges()`) |
 
 **No implementado** (mencionado solo como ideas futuras en la sección 10):
 
@@ -67,7 +66,7 @@ Usuario → URL → RouteConfig → Controller → (EF/SQL) → View → HTML al
 
 1. El usuario escribe una URL, por ejemplo `/Clientes/Registrar`.
 2. **RouteConfig** interpreta `{controller}/{action}` y llama a `ClientesController.Registrar()`.
-3. El **controlador** invoca stored procedures o consultas EF según la operación.
+3. El **controlador** ejecuta consultas LINQ sobre `Practica2Entities` y persiste con `SaveChanges()`.
 4. Devuelve una **vista** Razor que se convierte en HTML.
 5. El navegador muestra la página y ejecuta JavaScript de validación.
 
@@ -190,9 +189,8 @@ El layout define el **menú lateral** con las tres opciones del enunciado y el m
 **Entity Framework 6 Database First** genera el modelo desde la base de datos `Practica2` mediante un archivo **EDMX** (`EF/Model1.edmx`), siguiendo el patrón del curso.
 
 - **Contexto:** `Practica2Entities` en `EF/Model1.Context.cs` — puerta de entrada a la BD.
-- **DbSet:** `Clientes`, `Mascotas`, `tbError`.
+- **DbSet:** `Clientes`, `Mascotas` (solo las tablas del enunciado).
 - **Entidades:** clases parciales en `EF/` generadas desde el EDMX.
-- **SPs importados:** `spRegistrarCliente`, `spRegistrarMascota`, `spConsultarMascotas`, `spRegistrarError`.
 
 La conexión usa formato **EntityClient** con metadatos embebidos en el ensamblado:
 
@@ -206,7 +204,7 @@ El contexto lanza `UnintentionalCodeFirstException` en `OnModelCreating` porque 
 
 La relación **1 cliente → N mascotas** se modela en el EDMX y corresponde a `FK_Mascotas_Clientes` del script `Database script.txt`.
 
-Los scripts SQL auxiliares están en `Practica2_StoredProcedures.sql` (tabla `tbError` + procedimientos almacenados).
+El esquema de BD proviene únicamente de `Database script.txt` (tablas `Clientes` y `Mascotas`).
 
 ### 3.5 Scripts (validación en el navegador)
 
@@ -218,20 +216,20 @@ Ejemplo en registro de cliente (`Scripts/registrar-cliente.js`):
 - `Correo`: debe ser email válido.
 - Mensajes en español: *"Campo obligatorio."*
 
-En el **servidor**, las **reglas de negocio** (cédula duplicada, cliente activo, límite de mascotas) viven en los SPs `spRegistrarCliente` y `spRegistrarMascota`; el controlador solo interpreta el parámetro `@Resultado`. Los campos obligatorios del formulario se validan en el **navegador** con jQuery; si alguien desactiva JavaScript, la BD rechazaría un `INSERT` con valores nulos gracias a las columnas `NOT NULL`, pero no hay comprobación explícita de campos vacíos en C#.
+En el **servidor**, las **reglas de negocio** (cédula duplicada, cliente activo, límite de mascotas) se implementan en los controladores con **LINQ** y `SaveChanges()`. Los campos obligatorios del formulario se validan en el **navegador** con jQuery; si alguien desactiva JavaScript, la BD rechazaría un `INSERT` con valores nulos gracias a las columnas `NOT NULL`, pero no hay comprobación explícita de campos vacíos en C#.
 
 ### 3.6 Servicios
 
-`UtilitarioService` centraliza el registro de errores llamando al SP `spRegistrarError`, que inserta en la tabla `tbError`:
+`UtilitarioService` centraliza el registro de errores escribiendo en la traza de depuración con `Trace.TraceError`:
 
 ```csharp
-using (var context = new Practica2Entities())
+public void RegistrarErrorBitacora(string mensaje, string lugar, int usuario)
 {
-    context.spRegistrarError(mensaje, lugar, usuario);
+    Trace.TraceError("[{0}] Usuario={1}: {2}", lugar, usuario, mensaje);
 }
 ```
 
-Los controladores invocan `utilitario.RegistrarErrorBitacora(...)` en los bloques `catch`; nunca llaman al SP directamente.
+Los controladores invocan `utilitario.RegistrarErrorBitacora(...)` en los bloques `catch`.
 
 ---
 
@@ -239,19 +237,67 @@ Los controladores invocan `utilitario.RegistrarErrorBitacora(...)` en los bloque
 
 ### 4.1 Cédula única (no repetida)
 
-Al registrar un cliente, se invoca `spRegistrarCliente`. El SP devuelve `@Resultado = -1` si la cédula ya existe; el controlador muestra el mensaje genérico de error.
+Al registrar un cliente, el controlador consulta con LINQ si ya existe la cédula. Si existe, muestra el mensaje genérico de error; si no, inserta con `SaveChanges()`:
+
+```37:55:Practica2.Web/Controllers/ClientesController.cs
+                    var existe = (from C in context.Clientes
+                                  where C.Cedula == model.Cedula
+                                  select C).FirstOrDefault();
+
+                    if (existe != null)
+                    {
+                        ViewBag.Mensaje = "La información no se ha podido registrar";
+                        return View(model);
+                    }
+
+                    context.Clientes.Add(new Clientes
+                    {
+                        Cedula = model.Cedula,
+                        Nombre = model.Nombre,
+                        Correo = model.Correo,
+                        Estado = true
+                    });
+
+                    context.SaveChanges();
+```
 
 ### 4.2 Cliente activo para registrar mascota
 
-Solo clientes con `Estado == true` aparecen en el dropdown (consulta LINQ en `ObtenerClientesActivos`). Al procesar el POST, `spRegistrarMascota` valida de nuevo que el `IdCliente` exista y esté activo; devuelve `@Resultado = -2` si falla.
+Solo clientes con `Estado == true` aparecen en el dropdown (consulta LINQ en `ObtenerClientesActivos`). Al procesar el POST, el controlador valida de nuevo que el `IdCliente` exista y esté activo:
 
-**Doble validación:** la UI filtra inactivos, pero el SP comprueba por si alguien altera el `IdCliente` enviado.
+```38:47:Practica2.Web/Controllers/MascotasController.cs
+                    var cliente = (from C in context.Clientes
+                                   where C.IdCliente == model.IdCliente && C.Estado == true
+                                   select C).FirstOrDefault();
+
+                    if (cliente == null)
+                    {
+                        ViewBag.Mensaje = "La información no se ha podido registrar";
+                        model.Clientes = ObtenerClientesActivos(context, model.IdCliente);
+                        return View(model);
+                    }
+```
+
+**Doble validación:** la UI filtra inactivos, pero el controlador comprueba por si alguien altera el `IdCliente` enviado.
 
 ### 4.3 Máximo 2 mascotas de la misma especie por cliente
 
-`spRegistrarMascota` cuenta mascotas de la misma especie para el cliente; si hay 2 o más, devuelve `@Resultado = -3`. El controlador muestra el mensaje genérico cuando `resultado != 1`.
+El controlador cuenta mascotas de la misma especie para el cliente; si hay 2 o más, muestra el mensaje genérico:
 
-La comparación de `Especie` en el SP es **exacta** (mayúsculas/minúsculas importan según lo guardado).
+```49:58:Practica2.Web/Controllers/MascotasController.cs
+                    var countEspecie = (from M in context.Mascotas
+                                        where M.IdCliente == model.IdCliente && M.Especie == model.Especie
+                                        select M).Count();
+
+                    if (countEspecie >= 2)
+                    {
+                        ViewBag.Mensaje = "La información no se ha podido registrar";
+                        model.Clientes = ObtenerClientesActivos(context, model.IdCliente);
+                        return View(model);
+                    }
+```
+
+La comparación de `Especie` es **exacta** (mayúsculas/minúsculas importan según lo guardado).
 
 ### 4.4 Todos los campos obligatorios
 
@@ -259,23 +305,25 @@ La comparación de `Especie` en el SP es **exacta** (mayúsculas/minúsculas imp
 |------|-----------|------------------|
 | Cliente (navegador) | jQuery: `required` + `email` en correo | Sí — `Scripts/registrar-cliente.js` |
 | Mascota (navegador) | jQuery: `required`, `number`, `min: 0.01` en peso | Sí — `Scripts/registrar-mascota.js` |
-| Servidor (reglas de negocio) | Cédula única, cliente activo, límite por especie | Sí — SPs `spRegistrarCliente` / `spRegistrarMascota` |
+| Servidor (reglas de negocio) | Cédula única, cliente activo, límite por especie | Sí — LINQ + `SaveChanges()` en controladores |
 | Servidor (campos vacíos) | `[Required]` / `ModelState` | **No** — ver sección 10 |
 | BD | Columnas `NOT NULL` en script SQL | Sí — `Database script.txt` |
 
 ### 4.5 Consulta de mascotas
 
-El controlador invoca `spConsultarMascotas()` (JOIN en SQL) y proyecta el resultado a `ConsultaMascotaModel`:
+El controlador consulta con LINQ (JOIN entre `Mascotas` y `Clientes`) y proyecta el resultado a `ConsultaMascotaModel`:
 
-```78:86:Practica2.Web/Controllers/MascotasController.cs
-                    var lista = (from R in context.spConsultarMascotas()
+```91:101:Practica2.Web/Controllers/MascotasController.cs
+                    var lista = (from M in context.Mascotas
+                                 join C in context.Clientes on M.IdCliente equals C.IdCliente
+                                 orderby C.Nombre, M.Nombre
                                  select new ConsultaMascotaModel
                                  {
-                                     CedulaCliente = R.CedulaCliente,
-                                     NombreCliente = R.NombreCliente,
-                                     NombreMascota = R.NombreMascota,
-                                     Especie = R.Especie,
-                                     Peso = R.Peso
+                                     CedulaCliente = C.Cedula,
+                                     NombreCliente = C.Nombre,
+                                     NombreMascota = M.Nombre,
+                                     Especie = M.Especie,
+                                     Peso = M.Peso
                                  }).ToList();
 ```
 
@@ -311,12 +359,12 @@ sequenceDiagram
     U->>B: Completa formulario y pulsa Procesar
     B->>B: jQuery Validate (campos OK?)
     B->>C: POST /Clientes/Registrar (ClienteModel)
-    C->>EF: spRegistrarCliente(cedula, nombre, correo, @Resultado)
-    EF->>DB: EXEC spRegistrarCliente
-    DB-->>EF: @Resultado
-    alt @Resultado != 1
+    C->>EF: LINQ: buscar cédula duplicada
+    alt cédula existe
         C-->>B: View(model) + ViewBag.Mensaje
-    else éxito
+    else cédula libre
+        C->>EF: Add(cliente) + SaveChanges()
+        EF->>DB: INSERT Clientes
         C-->>B: Redirect Home/Index
     end
 ```
@@ -325,15 +373,15 @@ Pasos en código:
 
 1. **GET** `Registrar()` → vista vacía con `new ClienteModel()`.
 2. Usuario rellena y envía.
-3. **POST** `Registrar(ClienteModel model)` → `spRegistrarCliente` → si `@Resultado == 1`, redirect; si no, mensaje de error.
+3. **POST** `Registrar(ClienteModel model)` → LINQ comprueba cédula → si no existe, `Add` + `SaveChanges()` y redirect; si existe, mensaje de error.
 
-El SP inserta con `Estado = 1` y devuelve `@Resultado = -1` si la cédula ya existe.
+El insert asigna `Estado = true` al nuevo cliente.
 
 ### 5.2 Registro de mascota (POST)
 
 1. **GET** `Registrar()` → `CargarModeloRegistro(0)` llena el dropdown (LINQ a `Clientes` activos).
 2. Usuario elige cliente, especie, etc.
-3. **POST** → `spRegistrarMascota` (valida cliente activo y límite por especie en SQL) → si `@Resultado == 1`, **redirect a Consultar**.
+3. **POST** → LINQ valida cliente activo y límite por especie → si OK, `Add` + `SaveChanges()` → **redirect a Consultar**.
 
 ```57:57:Practica2.Web/Controllers/MascotasController.cs
                     return RedirectToAction("Consultar");
@@ -345,9 +393,9 @@ Tras registrar una mascota, el usuario ve de inmediato el listado actualizado.
 
 ## 6. Conceptos clave explicados
 
-### LINQ y stored procedures
+### LINQ y Entity Framework
 
-**LINQ** se usa para consultas simples en C# (p. ej. dropdown de clientes activos). Los altas y la consulta de mascotas usan **SPs importados en el EDMX** (`spRegistrarCliente`, `spRegistrarMascota`, `spConsultarMascotas`), invocados desde el contexto EF con `ObjectParameter` para parámetros de salida.
+**LINQ** se usa en los controladores para todas las operaciones de datos: consultas (dropdown, JOIN en consulta), validaciones de negocio (cédula duplicada, cliente activo, conteo por especie) e inserciones con `context.Clientes.Add` / `context.Mascotas.Add` seguidas de `SaveChanges()`.
 
 ### ViewBag
 
@@ -359,7 +407,7 @@ Plugin que lee reglas del objeto `rules` en JavaScript y muestra errores antes d
 
 ### Clave foránea (FK)
 
-`Mascotas.IdCliente` **debe** existir en `Clientes.IdCliente`. La BD rechaza un INSERT con `IdCliente` inválido. La regla de “cliente activo” se aplica en el dropdown (LINQ) y en `spRegistrarMascota` (SQL).
+`Mascotas.IdCliente` **debe** existir en `Clientes.IdCliente`. La BD rechaza un INSERT con `IdCliente` inválido. La regla de “cliente activo” se aplica en el dropdown (LINQ) y en el POST del controlador (LINQ).
 
 ### `using (var context = new Practica2Entities())`
 
@@ -391,10 +439,10 @@ Después de estudiar este proyecto, deberías poder explicar:
 
 1. **Qué hace MVC** y qué archivo tocar para cambiar la UI vs la lógica vs la BD.
 2. **Por qué hay ViewModels** además de entidades EF.
-3. **Cómo fluye una petición** desde la URL hasta la invocación de SPs o consultas EF.
-4. **Dónde vive cada regla de negocio** (cédula única, 2 mascotas/especie, cliente activo — en los SPs).
-5. **Diferencia entre validación cliente (jQuery)** y **servidor (SPs + controlador)**.
-6. **Qué es LINQ** y cuándo se usa frente a stored procedures importados en el EDMX.
+3. **Cómo fluye una petición** desde la URL hasta consultas LINQ y `SaveChanges()`.
+4. **Dónde vive cada regla de negocio** (cédula única, 2 mascotas/especie, cliente activo — en los controladores con LINQ).
+5. **Diferencia entre validación cliente (jQuery)** y **servidor (controladores + LINQ)**.
+6. **Qué es LINQ** y cómo se combina con Entity Framework para consultar y persistir datos.
 7. **Para qué sirve ViewBag** y cuándo usar redirect después de un POST.
 8. **Cómo se relacionan las tablas** con FK y cómo EF modela esa relación.
 
@@ -407,8 +455,8 @@ Comprobaciones ejecutadas al auditar el repositorio (junio 2026):
 | Prueba | Resultado | Cómo comprobarlo |
 |--------|-----------|------------------|
 | BD `Practica2` en localhost | Existe | `sqlcmd -S localhost -E -Q "SELECT name FROM sys.databases WHERE name = 'Practica2'"` |
-| Tablas `Clientes`, `Mascotas`, `tbError` | Presentes | Scripts `Database script.txt` + `Practica2_StoredProcedures.sql` |
-| SPs (`spRegistrarCliente`, etc.) | Presentes | `Practica2_StoredProcedures.sql` |
+| Tablas `Clientes`, `Mascotas` | Presentes | `Database script.txt` |
+| EDMX mapea solo `Clientes` y `Mascotas` | Sin SPs | `EF/Model1.edmx` |
 | FK `FK_Mascotas_Clientes` | Presente | Definida en el script SQL |
 | Compilación `Practica2.Web.sln` (MSBuild Debug) | Sin errores | MSBuild genera `Practica2.Web.dll` |
 | Código fuente de pantallas y reglas | Implementado | Ver sección 0 |
@@ -421,7 +469,7 @@ La base de datos estaba vacía (0 clientes, 0 mascotas), lo cual es normal antes
 
 - Añadir **Data Annotations** (`[Required]`, `[EmailAddress]`) en ViewModels para validación servidor automática con `ModelState.IsValid`.
 - Implementar **baja lógica** de clientes (`Estado = false`) desde una pantalla de administración.
-- Escribir **pruebas unitarias** para las reglas de negocio en los SPs.
+- Escribir **pruebas unitarias** para las reglas de negocio en los controladores.
 
 ---
 
